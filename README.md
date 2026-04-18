@@ -2,7 +2,7 @@
 
 **Create AI Chat Animations Content for LinkedIn**
 
-A free, open-source local web app by [CAIO Group](https://caiogroup.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
+A free, open-source local web app by [CAIO Group](https://wearecaio.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
 
 ![Chat Stream Studio](https://img.shields.io/badge/license-MIT-black) ![No install required](https://img.shields.io/badge/install-none-black) ![Works offline](https://img.shields.io/badge/offline-ready-black)
 
