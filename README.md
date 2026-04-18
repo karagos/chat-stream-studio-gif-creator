@@ -4,13 +4,21 @@
 
 A free, open-source local web app by [CAIO Group](https://wearecaio.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
 
-![Chat Stream Studio](https://img.shields.io/badge/license-MIT-black) ![No install required](https://img.shields.io/badge/install-none-black) ![Works offline](https://img.shields.io/badge/offline-ready-black)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
+[![No install required](https://img.shields.io/badge/install-none-black)](#how-to-use)
+[![Works offline](https://img.shields.io/badge/offline-ready-black)](#how-to-use)
+
+---
+
+## → [Download the app](chat-stream-studio.html)
+
+Single HTML file. Open in any browser. No install, no server, no dependencies.
 
 ---
 
 ## What it does
 
-Chat Stream Studio lets you animate a realistic AI chat conversation — complete with streaming text effects, thinking indicators, and custom branding — and export it as a GIF file ready to post on LinkedIn.
+Chat Stream Studio lets you animate a realistic AI chat conversation — complete with streaming text effects, thinking indicators, and custom branding — and export it as a GIF ready to post on LinkedIn.
 
 ## Features
 
@@ -19,32 +27,33 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 - **Full visual customization** — colors, fonts (Google Fonts), cell shape, shadow, border widths, gradients
 - **Avatar icons** — 16 built-in SVG icons + custom SVG upload for both user and AI
 - **Custom header icon** — SVG icon picker + upload your own logo
-- **Footer bar** — left / center / right branding text
-- **LinkedIn-optimized formats** — Square 1080×1080, Portrait 4:5, Landscape, Auto height
-- **Google Fonts** — search and load any of 37 curated fonts
+- **Footer bar** — left / center / right branding text (great for company name, tagline, @handle)
+- **LinkedIn-optimized formats** — Square 1080×1080, Portrait 4:5, Landscape 1200×628, Auto height
+- **Google Fonts** — search and apply any of 37 curated fonts; carries into GIF export
 - **8 one-click themes** — Default, Dark, Ocean, Warm, Mint, Purple, Slate, Brand Blue
-- **Save / Load config** — export your settings as JSON and reload them anytime
-- **Play once or loop** — GIF plays once and stops by default, toggle looping in Export
+- **Save / Load config** — export your settings as JSON and reload anytime
+- **Play once or loop** — GIF plays once and stops by default; toggle looping in Export settings
 
 ## How to use
 
-1. Download `Text Streaming GIF Studio.html`
+1. **[Download `chat-stream-studio.html`](chat-stream-studio.html)**
 2. Open it in any modern browser (Chrome, Firefox, Safari, Edge)
-3. No server, no install, no dependencies — everything runs locally
-4. Customize your chat in the left panel
-5. Click **Export GIF** and download
+3. Customize your chat in the left panel
+4. Click **Export GIF** → download your file
+5. Post directly to LinkedIn
 
-> Tip: Use **Auto height** format for long responses so nothing gets clipped. Use **480×480 test** format first to check timing, then switch to 1080×1080 for the final export.
+> **Tip:** Use **Auto height** format for long responses so nothing gets clipped.  
+> Use **480×480 test** format first to check timing, then switch to 1080×1080 for the final export.
 
 ## Export tips for LinkedIn
 
-| Format | FPS | Colors | Est. size |
-|--------|-----|--------|-----------|
-| 1080×1080 | 10 | 32 | ~1–2 MB |
-| 1080×1350 | 10 | 32 | ~1.5–3 MB |
-| 1200×628  | 10 | 32 | ~1–2 MB |
+| Format | FPS | Colors | Est. file size |
+|--------|-----|--------|---------------|
+| 1080×1080 square | 10 | 32 | ~1–2 MB |
+| 1080×1350 portrait | 10 | 32 | ~1.5–3 MB |
+| 1200×628 landscape | 10 | 32 | ~1–2 MB |
 
-LinkedIn's GIF limit is **5 MB**. Keep FPS ≤ 12 and colors ≤ 48 for large formats.
+LinkedIn's GIF limit is **5 MB**. Keep FPS ≤ 12 and palette colors ≤ 48 for large formats.
 
 ## License
 
@@ -52,4 +61,4 @@ MIT License — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 
-Made with ♥ by Stefanos Karagos -  [CAIO Group](https://wearecaio.com)
+Made with ♥ by Stefanos Karagos · [CAIO Group](https://wearecaio.com)
