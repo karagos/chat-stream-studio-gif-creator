@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>GIF capture stage</title>
+<style>
+  :root{
+    --bg: oklch(0.985 0.003 80);
+    --ink: oklch(0.18 0.005 80);
+    --ink-3: oklch(0.58 0.004 80);
+    --line: oklch(0.9 0.004 80);
+    --chip: oklch(0.955 0.004 80);
+    --chip-2: oklch(0.925 0.004 80);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Helvetica, "Helvetica Neue", Arial, sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+  html,body{width:680px;height:340px}
+  #stage{
+    width:680px;height:340px;background:var(--bg);
+    display:flex;gap:20px;align-items:center;justify-content:center;
+  }
+  .cell{
+    width:300px;height:300px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    position:relative;overflow:hidden;
+    box-shadow: 0 1px 0 oklch(0.88 0.004 80), 0 10px 24px -16px oklch(0.2 0.01 80 / .18);
+  }
+  .chrome{position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 12px 10px}
+  .titlebar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:10px;border-bottom:1px solid var(--line);
+    color:var(--ink-3);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--ink);display:inline-block;margin-right:6px;vertical-align:1px}
+  .thread{flex:1;display:flex;flex-direction:column;gap:10px;padding-top:12px;overflow:hidden}
+  .row{display:flex;gap:8px;align-items:flex-end}
+  .row.user{justify-content:flex-end}
+  .avatar{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex:0 0 22px}
+  .avatar.u{background:var(--chip-2);color:var(--ink)}
+  .bubble{max-width:220px;padding:8px 11px;border-radius:12px;font-size:12.5px;line-height:1.42;color:var(--ink)}
+  .bubble.user{background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+  .bubble.ai{background:var(--chip);border-bottom-left-radius:4px}
+  .bubble.ai.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px}
+  .tok{display:inline-block;white-space:pre}
+  .tw{font-variant-ligatures:none;white-space:pre-wrap;word-break:break-word}
+  .caret{display:inline-block;width:0.55ch;height:1em;vertical-align:-0.15em;background:var(--ink);margin-left:1px}
+  .status{display:flex;align-items:center;gap:6px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);letter-spacing:0.06em;text-transform:uppercase;padding-left:30px;height:12px}
+  .status .pulse{width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="cell">
+    <div class="chrome">
+      <div class="titlebar"><span><span class="dot"></span>CHAT · A</span><span>word stream</span></div>
+      <div class="thread" id="threadA"></div>
+    </div>
+  </div>
+  <div class="cell">
+    <div class="chrome">
+      <div class="titlebar"><span><span class="dot"></span>CHAT · B</span><span>char stream</span></div>
+      <div class="thread" id="threadB"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Deterministic timeline-driven renderer.
+   Given t (ms) within a cycle, build the DOM state for each cell. */
+
+const DURATION = 8000; // one loop
+
+const A = {
+  q: "What's a good way to start a morning?",
+  a: "Try a 10-minute walk before checking your phone. Natural light sets your circadian rhythm and your first thought of the day ends up being your own."
+};
+const B = {
+  q: "Summarize quicksort in one line.",
+  a: "Pick a pivot, split items into smaller and larger, then recursively sort each side until everything's in order."
+};
+
+/* ---- Timeline for variant A ---- */
+// Phases: 0..400 user-in, 400..1000 thinking, 1000..? streaming, then hold
+const A_TOKENS = A.a.match(/\S+\s*/g) || [];
+const A_STREAM_START = 1000;
+const A_PER_TOKEN = 90; // ms per token
+const A_STREAM_END = A_STREAM_START + A_TOKENS.length * A_PER_TOKEN; // ~1000+42*90 = 4780
+// plus hold to DURATION
+
+/* ---- Timeline for variant B ---- */
+const B_STREAM_START = 900;
+const B_PER_CHAR = 30;
+const B_STREAM_END = B_STREAM_START + B.a.length * B_PER_CHAR;
+// hold
+
+function el(tag, cls, txt){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(txt!=null) n.textContent = txt;
+  return n;
+}
+function userRow(text){
+  const row = el("div","row user");
+  row.appendChild(el("div","bubble user", text));
+  const av = el("div","avatar u"); av.textContent="Y";
+  row.appendChild(av);
+  return row;
+}
+function aiShell(extra=""){
+  const row = el("div","row ai");
+  const av = el("div","avatar"); av.textContent="◆";
+  const bubble = el("div","bubble ai "+extra);
+  row.appendChild(av); row.appendChild(bubble);
+  return {row,bubble};
+}
+function statusRow(text){
+  const s = el("div","status");
+  s.appendChild(el("span","pulse"));
+  s.appendChild(el("span",null,text));
+  return s;
+}
+
+function renderA(t){
+  const thread = document.getElementById("threadA");
+  thread.innerHTML = "";
+  if(t < 300) return; // blank briefly
+  thread.appendChild(userRow(A.q));
+
+  if(t >= 500 && t < A_STREAM_START){
+    thread.appendChild(statusRow("thinking"));
+    return;
+  }
+  if(t >= A_STREAM_START){
+    const {row, bubble} = aiShell();
+    const span = el("span","tokens"); bubble.appendChild(span);
+    const streamed = Math.min(A_TOKENS.length, Math.floor((t - A_STREAM_START)/A_PER_TOKEN));
+    // show fully-arrived tokens instantly + an in-progress token with fade style
+    for(let i=0;i<streamed;i++){
+      const s = el("span","tok"); s.textContent = A_TOKENS[i]; span.appendChild(s);
+    }
+    // partial fade-in for token `streamed` (the one arriving)
+    if(streamed < A_TOKENS.length){
+      const frac = ((t - A_STREAM_START) - streamed*A_PER_TOKEN) / A_PER_TOKEN;
+      const s = el("span","tok");
+      s.textContent = A_TOKENS[streamed];
+      s.style.opacity = frac.toFixed(3);
+      s.style.transform = `translateY(${(1-frac)*3}px)`;
+      s.style.filter = `blur(${(1-frac)*1.5}px)`;
+      s.style.display = "inline-block";
+      s.style.whiteSpace = "pre";
+      span.appendChild(s);
+    }
+    thread.appendChild(row);
+  }
+}
+
+function renderB(t){
+  const thread = document.getElementById("threadB");
+  thread.innerHTML = "";
+  if(t < 300) return;
+  thread.appendChild(userRow(B.q));
+
+  if(t >= 500 && t < B_STREAM_START){
+    thread.appendChild(statusRow("typing"));
+    return;
+  }
+  if(t >= B_STREAM_START){
+    const {row, bubble} = aiShell("mono");
+    const span = el("span","tw");
+    const chars = Math.min(B.a.length, Math.floor((t - B_STREAM_START)/B_PER_CHAR));
+    span.textContent = B.a.slice(0, chars);
+    bubble.appendChild(span);
+
+    // caret: blink every 450ms (2 steps/cycle -> show 50% of time)
+    const caret = el("span","caret");
+    const blinkT = Math.floor(t / 450) % 2;
+    // when done streaming, fade the caret out over 400ms starting at B_STREAM_END
+    if(t >= B_STREAM_END){
+      const since = t - B_STREAM_END;
+      const o = Math.max(0, 1 - since/400);
+      caret.style.opacity = o.toFixed(3);
+    }else{
+      caret.style.opacity = blinkT === 0 ? "1" : "0";
+    }
+    bubble.appendChild(caret);
+    thread.appendChild(row);
+  }
+}
+
+window.setTime = function(t){
+  const tm = ((t % DURATION) + DURATION) % DURATION;
+  renderA(tm);
+  renderB(tm);
+};
+
+// Initial draw
+window.setTime(0);
+
+// Autoplay for preview
+let raf0 = performance.now();
+let playing = true;
+window.setPlaying = (v)=>{ playing = v; if(playing){ raf0 = performance.now() - (window.__t||0); tick(); } };
+function tick(){
+  if(!playing) return;
+  const t = performance.now() - raf0;
+  window.__t = t;
+  window.setTime(t);
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

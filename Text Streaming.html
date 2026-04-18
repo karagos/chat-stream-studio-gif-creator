@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="en"><head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Text streaming — chat</title>
+<style>
+  :root{
+    --bg: oklch(0.985 0.003 80);
+    --ink: oklch(0.18 0.005 80);
+    --ink-2: oklch(0.38 0.005 80);
+    --ink-3: oklch(0.58 0.004 80);
+    --line: oklch(0.9 0.004 80);
+    --chip: oklch(0.955 0.004 80);
+    --chip-2: oklch(0.925 0.004 80);
+    --shadow: 0 1px 0 oklch(0.88 0.004 80), 0 10px 24px -16px oklch(0.2 0.01 80 / .18);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Helvetica, "Helvetica Neue", Arial, sans-serif;-webkit-font-smoothing:antialiased}
+  .page{
+    max-width:1240px;margin:0 auto;padding:48px 32px 80px;
+  }
+  header{
+    display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+    border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:28px;
+  }
+  h1{font-size:18px;font-weight:600;letter-spacing:-0.01em;margin:0}
+  .meta{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3);letter-spacing:0.02em;text-transform:uppercase}
+  .grid{
+    display:grid;gap:20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    justify-items:start;
+  }
+  .cellwrap{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
+  .cell{
+    width:300px;height:300px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    position:relative;overflow:hidden;
+    box-shadow: var(--shadow);
+  }
+  .caption{
+    display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:11px;color:var(--ink-3);
+    letter-spacing:0.02em;
+  }
+  .caption b{color:var(--ink);font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+  .caption span{text-transform:uppercase}
+
+  /* ---- chat shell inside each cell ---- */
+  .chrome{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:12px 12px 10px;
+  }
+  .titlebar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:10px;border-bottom:1px solid var(--line);
+    color:var(--ink-3);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--ink);display:inline-block;margin-right:6px;vertical-align:1px}
+  .thread{
+    flex:1;display:flex;flex-direction:column;gap:10px;
+    padding-top:12px;overflow:hidden;
+  }
+  .row{display:flex;gap:8px;align-items:flex-end}
+  .row.user{justify-content:flex-end}
+  .avatar{
+    width:22px;height:22px;border-radius:50%;
+    background:var(--ink);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:600;letter-spacing:0.02em;
+    flex:0 0 22px;
+  }
+  .avatar.u{background:var(--chip-2);color:var(--ink)}
+  .bubble{
+    max-width:220px;padding:8px 11px;border-radius:12px;
+    font-size:12.5px;line-height:1.42;letter-spacing:-0.005em;
+    color:var(--ink);
+  }
+  .bubble.user{background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+  .bubble.ai{background:var(--chip);border-bottom-left-radius:4px}
+  .bubble.ai.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px}
+
+  /* -------------- Variant A: token fade+rise -------------- */
+  .tokens{display:inline}
+  .tok{
+    display:inline-block;white-space:pre;
+    opacity:0;transform:translateY(3px);
+    filter:blur(1.5px);
+    animation: tokIn 340ms cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  @keyframes tokIn{
+    to{opacity:1;transform:translateY(0);filter:blur(0)}
+  }
+
+  /* -------------- Variant B: typewriter caret -------------- */
+  .tw{
+    font-variant-ligatures:none;
+    white-space:pre-wrap;word-break:break-word;
+  }
+  .caret{
+    display:inline-block;width:0.55ch;height:1em;vertical-align:-0.15em;
+    background:var(--ink);margin-left:1px;
+    animation: blink 0.9s steps(2,end) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  /* thinking / status line */
+  .status{
+    display:flex;align-items:center;gap:6px;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:10px;color:var(--ink-3);letter-spacing:0.06em;text-transform:uppercase;
+    padding-left:30px;
+    height:12px;
+  }
+  .status .pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--ink-3);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
+  /* hide scrollbars inside cells just in case */
+  .thread::-webkit-scrollbar{display:none}
+
+  footer{
+    margin-top:40px;color:var(--ink-3);font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:11px;letter-spacing:0.03em;
+  }
+
+  @media (max-width:700px){
+    .page{padding:28px 16px 60px}
+    header{flex-direction:column;align-items:flex-start;gap:6px}
+  }
+</style>
+</head>
+<body data-cc-id="cc-1" style="cursor: crosshair; font-family: &quot;Helvetica Neue&quot;;">
+  <div class="page">
+    <header>
+      <h1>Text streaming — chat response</h1>
+      <div class="meta">2 variants · 300 × 300 · monochrome · looped</div>
+    </header>
+
+    <div class="grid" id="grid"><div class="cellwrap">
+    <div class="cell" data-variant="A">
+      <div class="chrome">
+        <div class="titlebar">
+          <span><span class="dot"></span>CHAT · A</span>
+          <span>word stream</span>
+        </div>
+        <div class="thread"><div class="row user"><div class="bubble user">What's a good way to start a morning?</div><div class="avatar u">Y</div></div><div class="status"><span class="pulse"></span><span>thinking</span></div></div>
+      </div>
+    </div>
+    <div class="caption"><b>Variant A</b><span>Token fade + rise</span></div>
+  </div><div class="cellwrap">
+    <div class="cell" data-variant="B">
+      <div class="chrome">
+        <div class="titlebar">
+          <span><span class="dot"></span>CHAT · B</span>
+          <span>char stream</span>
+        </div>
+        <div class="thread"><div class="row user"><div class="bubble user">Summarize quicksort in one line.</div><div class="avatar u">Y</div></div><div class="row ai"><div class="avatar">◆</div><div class="bubble ai mono"><span class="tw">Pic</span><span class="caret"></span></div></div></div>
+      </div>
+    </div>
+    <div class="caption"><b>Variant B</b><span>Typewriter caret</span></div>
+  </div></div>
+
+    <footer>Cells loop continuously. Each cycle: user message → thinking → stream → settle → reset.</footer>
+  </div>
+
+<script>
+/* ------------------------------------------------------------------
+   Two streaming variants shown in 300×300 chat cells, looping.
+   A — token-by-token fade + rise (typical LLM word streaming)
+   B — character typewriter with blinking caret
+------------------------------------------------------------------- */
+
+const PROMPTS = [
+  {
+    q: "What's a good way to start a morning?",
+    a: "Try a 10-minute walk before checking your phone. Natural light sets your circadian rhythm and your first thought of the day ends up being your own."
+  },
+  {
+    q: "Summarize quicksort in one line.",
+    a: "Pick a pivot, split items into smaller and larger, then recursively sort each side until everything's in order."
+  }
+];
+
+const VARIANTS = [
+  { id:"A", label:"Token fade + rise",  sub:"word stream", render: runVariantA, prompt: PROMPTS[0] },
+  { id:"B", label:"Typewriter caret",   sub:"char stream", render: runVariantB, prompt: PROMPTS[1] },
+];
+
+const grid = document.getElementById("grid");
+
+VARIANTS.forEach(v=>{
+  const wrap = document.createElement("div");
+  wrap.className = "cellwrap";
+  wrap.innerHTML = `
+    <div class="cell" data-variant="${v.id}">
+      <div class="chrome">
+        <div class="titlebar">
+          <span><span class="dot"></span>CHAT · ${v.id}</span>
+          <span>${v.sub}</span>
+        </div>
+        <div class="thread"></div>
+      </div>
+    </div>
+    <div class="caption"><b>Variant ${v.id}</b><span>${v.label}</span></div>
+  `;
+  grid.appendChild(wrap);
+  const thread = wrap.querySelector(".thread");
+  v.render(thread, v.prompt);
+});
+
+/* ------------------------------ utils ------------------------------ */
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function el(tag, cls, txt){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(txt!=null) n.textContent = txt;
+  return n;
+}
+function userRow(text){
+  const row = el("div","row user");
+  row.appendChild(el("div","bubble user", text));
+  row.appendChild(Object.assign(el("div","avatar u"),{textContent:"Y"}));
+  return row;
+}
+function aiShell(extraClass=""){
+  const row = el("div","row ai");
+  const av = el("div","avatar"); av.textContent = "◆";
+  const bubble = el("div","bubble ai "+extraClass);
+  row.appendChild(av);
+  row.appendChild(bubble);
+  return { row, bubble };
+}
+function statusRow(text){
+  const s = el("div","status");
+  s.appendChild(el("span","pulse"));
+  s.appendChild(el("span",null,text));
+  return s;
+}
+
+/* ------------------------------ Variant A: token fade + rise ------------------------------ */
+async function runVariantA(thread, {q,a}){
+  // Split into whitespace-preserving tokens
+  const tokens = a.match(/\S+\s*/g) || [a];
+
+  async function cycle(){
+    thread.innerHTML = "";
+    // user
+    thread.appendChild(userRow(q));
+    await sleep(650);
+
+    // thinking
+    const status = statusRow("thinking");
+    thread.appendChild(status);
+    await sleep(700);
+    status.remove();
+
+    // ai bubble
+    const { row, bubble } = aiShell();
+    const span = el("span","tokens");
+    bubble.appendChild(span);
+    thread.appendChild(row);
+
+    for(let i=0;i<tokens.length;i++){
+      const t = el("span","tok");
+      t.textContent = tokens[i];
+      // small random stagger feels like real streaming
+      t.style.animationDelay = "0ms";
+      span.appendChild(t);
+      // variable per-token pacing
+      const delay = 55 + Math.random()*85 + (tokens[i].length>6?40:0);
+      await sleep(delay);
+    }
+
+    await sleep(1600);
+    // fade out thread to loop
+    thread.animate(
+      [{opacity:1},{opacity:0}],
+      {duration:450, fill:"forwards", easing:"ease-in"}
+    ).onfinish = ()=>{ thread.style.opacity=""; };
+    await sleep(500);
+  }
+
+  while(true){
+    await cycle();
+    await sleep(200);
+  }
+}
+
+/* ------------------------------ Variant B: typewriter caret ------------------------------ */
+async function runVariantB(thread, {q,a}){
+  async function cycle(){
+    thread.innerHTML = "";
+    thread.appendChild(userRow(q));
+    await sleep(650);
+
+    const status = statusRow("typing");
+    thread.appendChild(status);
+    await sleep(550);
+    status.remove();
+
+    const { row, bubble } = aiShell("mono");
+    const text = el("span","tw");
+    const caret = el("span","caret");
+    bubble.appendChild(text);
+    bubble.appendChild(caret);
+    thread.appendChild(row);
+
+    for(let i=0;i<a.length;i++){
+      text.textContent += a[i];
+      // punctuation pauses
+      const c = a[i];
+      let d = 22 + Math.random()*26;
+      if(c===" ") d = 14 + Math.random()*18;
+      if(",".includes(c)) d = 160;
+      if(".!?".includes(c)) d = 240;
+      await sleep(d);
+    }
+
+    // settle: stop blinking, fade caret
+    caret.style.animation = "none";
+    caret.animate([{opacity:1},{opacity:0}],{duration:400, fill:"forwards"});
+
+    await sleep(1500);
+    thread.animate(
+      [{opacity:1},{opacity:0}],
+      {duration:450, fill:"forwards", easing:"ease-in"}
+    ).onfinish = ()=>{ thread.style.opacity=""; };
+    await sleep(500);
+  }
+
+  while(true){
+    await cycle();
+    await sleep(200);
+  }
+}
+</script>
+
+
+</body></html>

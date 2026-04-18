@@ -1,0 +1,1457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chat Stream Studio — CAIO Group</title>
+<style>
+  :root{
+    --bg: oklch(0.985 0.003 80);
+    --ink: oklch(0.18 0.005 80);
+    --ink-2: oklch(0.38 0.005 80);
+    --ink-3: oklch(0.58 0.004 80);
+    --line: oklch(0.9 0.004 80);
+    --chip: oklch(0.955 0.004 80);
+    --chip-2: oklch(0.925 0.004 80);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Helvetica,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .app{display:grid;grid-template-columns: var(--sidebar-w,360px) 1fr;min-height:100vh}
+  .sidebar{
+    background:#fff;border-right:1px solid var(--line);
+    padding:22px 22px 24px;
+    overflow-y:auto;overflow-x:hidden;
+    max-height:100vh;
+    min-width:240px;max-width:600px;
+    position:relative;
+  }
+  .sidebar-resizer{
+    position:absolute;top:0;right:-3px;width:6px;height:100%;
+    cursor:col-resize;z-index:10;
+    background:transparent;
+  }
+  .sidebar-resizer:hover,.sidebar-resizer.dragging{background:var(--line)}
+  .format-bar{padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  /* Sidebar header */
+  .sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .sidebar-title{font-size:14px;font-weight:700;letter-spacing:-0.01em;color:var(--ink)}
+  .sidebar-sub{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+
+  /* Collapsible sections */
+  .fs-wrap{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+  .fs-toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;background:#fff;border:none;cursor:pointer;
+    font:inherit;font-size:11.5px;font-weight:600;color:var(--ink);
+    letter-spacing:-0.005em;text-align:left;
+  }
+  .fs-toggle:hover{background:var(--chip)}
+  .fs-arrow{font-size:12px;color:var(--ink-3);transition:transform 0.15s;margin-left:auto}
+  .fs-body{padding:0 14px 14px;display:none}
+  .fs-wrap.open .fs-body{display:block}
+  .fs-wrap.open .fs-arrow{transform:rotate(0deg)}
+  .fs-wrap:not(.open) .fs-arrow{transform:rotate(-90deg)}
+
+  /* Form elements */
+  label{display:block;font-size:11px;color:var(--ink-2);margin:10px 0 4px;letter-spacing:0.01em}
+  label:first-child{margin-top:0}
+  .check-label{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-2);margin:6px 0;cursor:pointer}
+  .check-label input[type=checkbox]{width:auto;margin:0}
+  input[type=text],textarea,select{
+    width:100%;font:inherit;font-size:12.5px;color:var(--ink);
+    padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;resize:vertical;
+  }
+  textarea{min-height:50px;line-height:1.35}
+  input[type=color]{width:40px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .swatchrow{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .swatchrow span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3)}
+  .swatch-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .section-divider{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:9.5px;
+    color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em;
+    margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--line);
+  }
+  .info-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);line-height:1.5}
+  .unit{color:var(--ink-3);font-weight:400;font-size:10px}
+
+  /* Bubble labels */
+  .field-group{margin-bottom:8px}
+  .bubble-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-2);margin:0 0 4px}
+  .user-label{color:var(--ink)}
+  .ai-label{color:var(--ink-2)}
+  .opt-tag{font-weight:400;font-size:10px;color:var(--ink-3);font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:0.03em}
+
+  /* File inputs */
+  .file-row{display:flex;gap:6px;align-items:center}
+  .file-row input[type=file]{flex:1;font-size:10.5px;padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--chip);color:var(--ink-2)}
+  .btn-xs{font:inherit;font-size:10.5px;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+  .btn-xs:hover{background:var(--chip)}
+
+  /* Line controls */
+  .line-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .line-row>span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3);flex:1;min-width:0}
+  .line-row>.range{flex:1.2}
+
+  /* Background type */
+  .radius-presets{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+  .radius-btn{font:inherit;font-size:10.5px;font-weight:500;padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--ink-2)}
+  .radius-btn:hover,.radius-btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .bg-type-row{display:flex;gap:6px;margin-top:6px}
+  .bg-type-btn{flex:1;font:inherit;font-size:11px;font-weight:600;padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;color:var(--ink-2)}
+  .bg-type-btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* Actions */
+  .actions{
+    position:sticky;bottom:0;background:#fff;
+    margin:12px -22px 0;padding:14px 22px 20px;
+    border-top:1px solid var(--line);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .btn-export{
+    font:inherit;font-size:13px;font-weight:700;padding:12px;
+    border-radius:10px;border:none;background:var(--ink);color:#fff;cursor:pointer;
+    letter-spacing:0.01em;width:100%;
+  }
+  .btn-export:disabled{opacity:.5;cursor:progress}
+  .action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;width:100%}
+  .btn-action{
+    font:inherit;font-size:11.5px;font-weight:500;padding:9px 4px;
+    border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink-2);cursor:pointer;
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .btn-action:hover{background:var(--chip);color:var(--ink)}
+  label.btn-action{margin:0;cursor:pointer;}
+  .sidebar-brand{
+    margin-top:12px;padding:12px 0 0;
+    border-top:1px solid var(--line);
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .brand-name{font-size:12px;font-weight:700;letter-spacing:-0.005em;color:var(--ink)}
+  .brand-tagline{font-size:10.5px;color:var(--ink-2);line-height:1.4}
+  .brand-license{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:9.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+  .export-status{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--ink-3);text-align:center}
+  .iconpick{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:4px}
+  .iconpick button{
+    aspect-ratio:1;padding:0;border:1px solid var(--line);border-radius:6px;
+    background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-2);
+  }
+  .iconpick button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .iconpick button svg{width:60%;height:60%;display:block}
+  .avatar svg{width:60%;height:60%;display:block}
+  #hdr_svg_preview svg{width:100%;height:100%;display:block}
+  .range{display:flex;gap:8px;align-items:center}
+  .range input[type=range]{flex:1}
+  .range output{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-2);min-width:40px;text-align:right}
+
+  .variant{display:flex;gap:6px;margin:4px 0 0}
+  .variant button{
+    flex:1;font:inherit;font-size:11.5px;padding:8px 6px;border-radius:7px;
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);cursor:pointer;
+    display:flex;flex-direction:column;gap:2px;align-items:center;line-height:1.2;
+  }
+  .variant button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .variant button small{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:.7}
+
+  .actions{
+    position:sticky;bottom:0;background:#fff;margin:20px -22px 0;
+    padding:14px 22px;border-top:1px solid var(--line);
+    display:flex;gap:10px;align-items:center;
+  }
+
+
+  .stageWrap{padding:32px;display:flex;flex-direction:column;align-items:center;gap:22px;overflow:hidden}
+  .stageScale{display:flex;align-items:center;justify-content:center;width:100%}
+  .stageScale>div{ transform-origin:top center; }
+  .stageTitle{
+    align-self:flex-start;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;
+    color:var(--ink-3);letter-spacing:0.08em;text-transform:uppercase;
+  }
+  #stage{
+    width:var(--sw,480px);height:var(--sh,480px);background:var(--cbg,#fafaf8);
+    display:flex;align-items:center;justify-content:center;border-radius:6px;
+    font-family:Helvetica,"Helvetica Neue",Arial,sans-serif;
+  }
+  .cell{
+    width:var(--cw,420px);height:var(--ch,420px);background:var(--cell-bg,#fff);
+    border:var(--b-line,1px) solid var(--cell-line,oklch(0.9 0.004 80));
+    border-radius:18px;position:relative;overflow:hidden;
+    box-shadow: 0 1px 0 oklch(0.88 0.004 80), 0 18px 40px -24px oklch(0.2 0.01 80 / .25);
+    display:flex;flex-direction:column;
+  }
+  .chrome{flex:1;display:flex;flex-direction:column;padding:18px 18px 16px;overflow:hidden}
+  .cell-footer{
+    padding:var(--footer-pad-v,8px) 18px;background:var(--footer-bg,#f1ede5);
+    display:flex;align-items:center;justify-content:space-between;
+    font-family:Helvetica,"Helvetica Neue",Arial,sans-serif;
+    font-size:var(--footer-font,11px);color:var(--footer-fg,#888078);
+    flex:0 0 auto;
+  }
+  .cell-footer span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .cell-footer .fc{text-align:center}
+  .cell-footer .fr{text-align:right}
+  .titlebar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:14px;border-bottom:var(--b-hline,1px) solid var(--header-line,oklch(0.9 0.004 80));
+    color:var(--ink-3);font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
+  }
+  .titlebar>span:first-child{display:flex;align-items:center;line-height:1;gap:0.5em}
+  .dot{width:0.65em;height:0.65em;border-radius:50%;background:var(--dot-color,#111);flex:0 0 0.65em;align-self:center}
+  .dot.icon{width:1.1em;height:1.1em;background:none !important;border-radius:0;display:flex;align-items:center;justify-content:center;flex:0 0 1.1em;align-self:center}
+  .dot.icon svg{width:100%;height:100%;display:block;color:var(--dot-color,#111);overflow:visible}
+  .thread{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:18px;overflow:hidden}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row.user{justify-content:flex-end}
+  .avatar{width:var(--avatar-size,26px);height:var(--avatar-size,26px);border-radius:50%;background:var(--bubble-user-bg,#111);color:var(--bubble-user-fg,#fff);display:flex;align-items:center;justify-content:center;font-size:calc(var(--avatar-size,26px) * 0.42);font-weight:600;flex:0 0 var(--avatar-size,26px);overflow:hidden}
+  .avatar.u{background:var(--chip-2);color:var(--ink)}
+  .bubble{max-width:var(--bubble-max-w,78%);padding:var(--bubble-pad,10px 13px);border-radius:var(--bubble-radius,14px);font-size:var(--bubble-font,15px);line-height:1.42;color:var(--ink);font-family:Helvetica,"Helvetica Neue",Arial,sans-serif}
+  .bubble.user{background:var(--bubble-user-bg,#111);color:var(--bubble-user-fg,#fff);border-bottom-right-radius:5px}
+  .bubble.ai{background:var(--bubble-ai-bg,oklch(0.955 0.004 80));color:var(--bubble-ai-fg,oklch(0.18 0.005 80));border-bottom-left-radius:5px}
+  .bubble.ai.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:var(--bubble-mono-font,13.5px)}
+  .tok{display:inline-block;white-space:pre}
+  .tw{font-variant-ligatures:none;white-space:pre-wrap;word-break:break-word}
+  .caret{display:inline-block;width:0.55ch;height:1em;vertical-align:-0.15em;background:var(--bubble-ai-fg,#111);margin-left:1px}
+.status{display:flex;align-items:center;gap:7px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:var(--status-font,11px);color:var(--ink-3);letter-spacing:0.06em;text-transform:uppercase;padding-left:calc(var(--avatar-size,26px) + 10px);height:calc(var(--status-font,11px) * 1.4)}
+  .status .pulse{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+  @keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+  .status.live .pulse{animation:pulse 1.2s ease-in-out infinite}
+
+  #preview{max-width:680px;width:100%;border:1px solid var(--line);border-radius:8px;display:block;background:#fff}
+  .hint{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3);max-width:680px;line-height:1.5}
+  .hint code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:10.5px}
+  .hint a{color:var(--ink);font-weight:600}
+
+  @media (max-width:900px){
+    .app{grid-template-columns:1fr}
+    .sidebar{max-height:none;border-right:none;border-bottom:1px solid var(--line)}
+  }
+
+  /* Progress bar */
+  #export_progress{display:none;height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+  #export_progress_bar{height:100%;width:0%;background:var(--ink);border-radius:2px;transition:width 0.1s}
+
+  /* Theme pills */
+  .themes{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .theme-pill{
+    font:inherit;font-size:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;
+    padding:4px 9px;border-radius:20px;border:1px solid var(--line);
+    background:#fff;cursor:pointer;color:var(--ink-2);transition:all 0.1s;
+  }
+  .theme-pill:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* Google Fonts search */
+  .font-search{position:relative}
+  .font-results{
+    position:absolute;z-index:100;top:100%;left:0;right:0;
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    max-height:160px;overflow-y:auto;display:none;
+    box-shadow:0 4px 16px oklch(0.2 0.01 80 / .12);
+  }
+  .font-results.open{display:block}
+  .font-result{
+    padding:6px 10px;font-size:12px;cursor:pointer;color:var(--ink);
+  }
+  .font-result:hover{background:var(--chip)}
+  .font-current{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;
+    color:var(--ink-3);margin-top:4px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+  <div class="sidebar-resizer" id="sidebarResizer"></div>
+
+  <div class="sidebar-header">
+    <div>
+      <div class="sidebar-title">Chat Stream Studio</div>
+      <div class="sidebar-sub">by CAIO Group</div>
+    </div>
+  </div>
+
+  <!-- QUICK START -->
+  <div class="format-bar">
+    <label style="margin:0 0 4px">Format</label>
+    <select id="format">
+      <option value="auto_h">Auto height (1080w) — content-fit</option>
+      <option value="square_sm">480×480 — test / preview</option>
+      <option value="square" selected>1080×1080 — LinkedIn square</option>
+      <option value="portrait">1080×1350 — LinkedIn portrait</option>
+      <option value="landscape">1200×628 — LinkedIn landscape</option>
+      <option value="wide">800×500 — compact wide</option>
+    </select>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px" id="h_adjust_row">
+      <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);white-space:nowrap">Height adjust</span>
+      <input type="range" id="h_adjust" min="-400" max="400" step="20" value="0" style="flex:1"/>
+      <output id="h_adjust_o" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-2);min-width:38px;text-align:right">0 px</output>
+    </div>
+  </div>
+
+  <div class="fs-wrap" id="fs_themes">
+    <button class="fs-toggle" data-target="fs_themes">Quick start — Themes<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div class="themes" id="theme_pills"></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="fs-wrap" id="fs_content">
+    <button class="fs-toggle" data-target="fs_content">Content<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div class="variant" id="variant">
+        <button data-v="A" class="on">Word stream<small>fade + rise</small></button>
+        <button data-v="B">Typewriter<small>caret blink</small></button>
+      </div>
+      <div class="field-group" style="margin-top:12px">
+        <label class="bubble-label user-label">① User</label>
+        <textarea id="q">What's a good way to start a morning?</textarea>
+      </div>
+      <div class="field-group">
+        <label class="bubble-label ai-label">② AI <span class="opt-tag">streams</span></label>
+        <textarea id="a">Try a 10-minute walk before checking your phone. Natural light sets your circadian rhythm and your first thought of the day ends up being your own.</textarea>
+      </div>
+      <div class="field-group">
+        <label class="bubble-label user-label">③ User follow-up <span class="opt-tag">optional</span></label>
+        <textarea id="q2" placeholder="Leave empty to skip"></textarea>
+      </div>
+      <div class="field-group">
+        <label class="bubble-label ai-label">④ AI reply <span class="opt-tag">optional · streams last</span></label>
+        <textarea id="a2" placeholder="Leave empty to skip"></textarea>
+      </div>
+      <label>Thinking label</label>
+      <input type="text" id="think" value="thinking" />
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="fs-wrap" id="fs_header">
+    <button class="fs-toggle" data-target="fs_header">Header<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div class="row2">
+        <div><label>Left (brand)</label><input type="text" id="brand" value="CHAT"/></div>
+        <div><label>Right label</label><input type="text" id="sub" value="assistant"/></div>
+      </div>
+      <label style="margin-top:10px">Header icon</label>
+      <div class="iconpick" id="hdr_pick"></div>
+      <label style="margin-top:8px">Custom SVG icon</label>
+      <div class="file-row">
+        <input type="file" id="hdr_svg_upload" accept=".svg,image/svg+xml"/>
+        <button type="button" id="hdr_svg_clear" class="btn-xs">Clear</button>
+      </div>
+      <div id="hdr_svg_preview" class="svg-preview" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- AVATARS -->
+  <div class="fs-wrap" id="fs_avatars">
+    <button class="fs-toggle" data-target="fs_avatars">Avatars<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <label class="check-label"><input type="checkbox" id="show_av" checked/>Show avatars</label>
+      <div class="row2" style="margin-top:12px">
+        <div>
+          <label>User icon</label>
+          <div class="iconpick" id="u_pick"></div>
+          <input type="text" id="u_ic" value="" maxlength="3" placeholder="text / emoji" style="margin-top:4px"/>
+          <div class="file-row" style="margin-top:4px">
+            <input type="file" id="u_svg_upload" accept=".svg,image/svg+xml"/>
+            <button type="button" id="u_svg_clear" class="btn-xs">✕</button>
+          </div>
+          <div class="row2" style="margin-top:6px">
+            <div class="swatchrow"><input type="color" id="u_avbg" value="#e5e2dc"><span>bg</span></div>
+            <div class="swatchrow"><input type="color" id="u_avfg" value="#1a1916"><span>fg</span></div>
+          </div>
+        </div>
+        <div>
+          <label>AI icon</label>
+          <div class="iconpick" id="ai_pick"></div>
+          <input type="text" id="ai_ic" value="" maxlength="3" placeholder="text / emoji" style="margin-top:4px"/>
+          <div class="file-row" style="margin-top:4px">
+            <input type="file" id="ai_svg_upload" accept=".svg,image/svg+xml"/>
+            <button type="button" id="ai_svg_clear" class="btn-xs">✕</button>
+          </div>
+          <div class="row2" style="margin-top:6px">
+            <div class="swatchrow"><input type="color" id="ai_avbg" value="#1a1916"><span>bg</span></div>
+            <div class="swatchrow"><input type="color" id="ai_avfg" value="#ffffff"><span>fg</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANIMATION -->
+  <div class="fs-wrap" id="fs_anim">
+    <button class="fs-toggle" data-target="fs_anim">Animation &amp; timing<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div class="row2">
+        <div>
+          <label>Stream speed <span class="unit">ms/step</span></label>
+          <div class="range"><input type="range" id="speed" min="10" max="200" step="5" value="90"/><output id="speed_o">90</output></div>
+        </div>
+        <div>
+          <label>Initial delay <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="start" min="0" max="2500" step="50" value="1000"/><output id="start_o">1000</output></div>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div>
+          <label>Thinking duration <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="think_dur" min="0" max="3000" step="50" value="900"/><output id="think_dur_o">900</output></div>
+        </div>
+        <div>
+          <label>Gap between bubbles <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="between" min="0" max="2000" step="50" value="300"/><output id="between_o">300</output></div>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div>
+          <label>Tail hold <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="tail" min="0" max="5000" step="100" value="1500"/><output id="tail_o">1500</output></div>
+        </div>
+        <div>
+          <label>FPS</label>
+          <div class="range"><input type="range" id="fps" min="8" max="24" step="1" value="15"/><output id="fps_o">15</output></div>
+        </div>
+      </div>
+      <label class="check-label" style="margin-top:10px"><input type="checkbox" id="auto_dur" checked/>Auto-fit duration to text length</label>
+      <div class="row2" style="margin-top:8px">
+        <div>
+          <label>Duration <span class="unit">s</span></label>
+          <div class="range"><input type="range" id="dur" min="2" max="30" step="0.5" value="8"/><output id="dur_o">8.0</output></div>
+        </div>
+      </div>
+      <div id="auto_info" class="info-tag" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- APPEARANCE -->
+  <div class="fs-wrap" id="fs_appear">
+    <button class="fs-toggle" data-target="fs_appear">Appearance<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div class="swatch-grid">
+        <div class="swatchrow"><input type="color" id="c_cell" value="#ffffff"><span>cell bg</span></div>
+        <div class="swatchrow"><input type="color" id="c_user" value="#1a1916"><span>user bubble</span></div>
+        <div class="swatchrow"><input type="color" id="c_userfg" value="#ffffff"><span>user text</span></div>
+        <div class="swatchrow"><input type="color" id="c_ai" value="#f1ede5"><span>AI bubble</span></div>
+        <div class="swatchrow"><input type="color" id="c_aifg" value="#1a1916"><span>AI text</span></div>
+        <div class="swatchrow"><input type="color" id="c_dot" value="#1a1916"><span>header icon</span></div>
+      </div>
+      <div class="section-divider">Lines</div>
+      <div class="line-row"><input type="color" id="c_line" value="#e5e2dc"><span>cell border</span><div class="range"><input type="range" id="b_line" min="0" max="6" step="0.5" value="1"/><output id="b_line_o">1</output></div></div>
+      <div class="line-row"><input type="color" id="c_hline" value="#e5e2dc"><span>header divider</span><div class="range"><input type="range" id="b_hline" min="0" max="6" step="0.5" value="1"/><output id="b_hline_o">1</output></div></div>
+      <div class="section-divider">Cell shape</div>
+      <div class="row2">
+        <div>
+          <label>Corner radius <span class="unit">px</span></label>
+          <div class="radius-presets">
+            <button type="button" class="radius-btn" data-r="0">Sharp</button>
+            <button type="button" class="radius-btn" data-r="8">Soft</button>
+            <button type="button" class="radius-btn" data-r="18">Rounded</button>
+            <button type="button" class="radius-btn" data-r="32">Very round</button>
+            <button type="button" class="radius-btn" data-r="999">Pill</button>
+          </div>
+          <div class="range" style="margin-top:6px"><input type="range" id="cell_radius" min="0" max="200" step="1" value="18"/><output id="cell_radius_o">18</output></div>
+        </div>
+        <div>
+          <label>Shadow intensity</label>
+          <div class="range"><input type="range" id="shadow_intensity" min="0" max="100" step="5" value="25"/><output id="shadow_intensity_o">25</output></div>
+        </div>
+      </div>
+      <label class="check-label" style="margin-top:8px"><input type="checkbox" id="show_shadow" checked/>Show drop shadow</label>
+      <div class="section-divider">Canvas background</div>
+      <div class="bg-type-row">
+        <button type="button" class="bg-type-btn on" data-bg="solid">Solid</button>
+        <button type="button" class="bg-type-btn" data-bg="gradient">Gradient</button>
+        <button type="button" class="bg-type-btn" data-bg="noise">Noise</button>
+      </div>
+      <div class="swatchrow" style="margin-top:8px"><input type="color" id="c_bg" value="#fafaf8"><span>background color</span></div>
+      <div id="bg_gradient_controls" style="display:none;margin-top:8px">
+        <div class="row2">
+          <div class="swatchrow"><input type="color" id="c_grad1" value="#fafaf8"><span>from</span></div>
+          <div class="swatchrow"><input type="color" id="c_grad2" value="#e5e2dc"><span>to</span></div>
+        </div>
+        <label style="margin-top:6px">Angle <span class="unit">deg</span></label>
+        <div class="range"><input type="range" id="grad_angle" min="0" max="360" step="5" value="135"/><output id="grad_angle_o">135</output></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <div class="fs-wrap" id="fs_type">
+    <button class="fs-toggle" data-target="fs_type">Typography<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <label>Google Font</label>
+      <div class="font-search">
+        <input type="text" id="font_search" placeholder="Search e.g. Inter, Poppins…" autocomplete="off"/>
+        <div class="font-results" id="font_results"></div>
+      </div>
+      <div class="font-current" id="font_current">Current: Helvetica (system)</div>
+      <button type="button" id="font_reset" class="btn-xs" style="margin-top:6px">Reset to system font</button>
+      <div class="row2" style="margin-top:12px">
+        <div>
+          <label>Bubble size <span class="unit">×</span></label>
+          <div class="range"><input type="range" id="bubble_font_scale" min="0.5" max="2.0" step="0.05" value="1.0"/><output id="bubble_font_scale_o">1.0</output></div>
+        </div>
+        <div>
+          <label>Bubble max width <span class="unit">%</span></label>
+          <div class="range"><input type="range" id="bubble_max_w" min="40" max="95" step="5" value="78"/><output id="bubble_max_w_o">78</output></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="fs-wrap" id="fs_footer">
+    <button class="fs-toggle" data-target="fs_footer">Footer bar<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <label class="check-label"><input type="checkbox" id="show_footer" checked/>Show footer</label>
+      <div class="row2" style="margin-top:10px">
+        <div><label>Left</label><input type="text" id="f_left" value="" placeholder="company name"/></div>
+        <div><label>Center</label><input type="text" id="f_center" value="" placeholder="tagline"/></div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <div><label>Right</label><input type="text" id="f_right" value="" placeholder="@handle"/></div>
+        <div>
+          <label>Font size <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="f_size" min="8" max="28" step="1" value="11"/><output id="f_size_o">11</output></div>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <div>
+          <label>Height <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="f_height" min="0" max="80" step="2" value="28"/><output id="f_height_o">28</output></div>
+        </div>
+        <div>
+          <label>Padding above <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="thread_pad_b" min="0" max="60" step="2" value="0"/><output id="thread_pad_b_o">0</output></div>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div class="swatchrow"><input type="color" id="f_bg" value="#f1ede5"><span>footer bg</span></div>
+        <div class="swatchrow"><input type="color" id="f_fg" value="#888078"><span>footer text</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="fs-wrap open" id="fs_export">
+    <button class="fs-toggle" data-target="fs_export">Export<span class="fs-arrow">▾</span></button>
+    <div class="fs-body">
+      <div>
+          <label>Colors in palette</label>
+          <div class="range"><input type="range" id="colors" min="16" max="256" step="8" value="64"/><output id="colors_o">64</output></div>
+        </div>
+      <div id="size_hint" class="info-tag" style="margin-top:6px">For 1080px+ use ≤12 fps + 32 colors to stay under 5MB</div>
+      <label class="check-label" style="margin-top:10px"><input type="checkbox" id="gif_loop"/>Loop GIF (uncheck = play once and stop)</label>
+      <div id="export_progress" style="display:none;height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden"><div id="export_progress_bar" style="height:100%;width:0%;background:var(--ink);border-radius:2px;transition:width 0.1s"></div></div>
+    </div>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="actions">
+    <button class="btn-export" id="btn_export">Export GIF</button>
+    <div class="action-row">
+      <button class="btn-action" id="btn_save_cfg" title="Save settings to JSON">Save config</button>
+      <label class="btn-action" title="Load settings from JSON">Load config<input type="file" id="btn_load_cfg" accept=".json" style="display:none"/></label>
+      <button class="btn-action" id="btn_reset" title="Reset all settings">Reset</button>
+    </div>
+    <div id="status" class="export-status">Ready.</div>
+    <div class="sidebar-brand">
+      <div class="brand-name">CAIO Group</div>
+      <div class="brand-tagline">Create AI Chat Animations Content for LinkedIn</div>
+      <div class="brand-license">Open source · MIT License · <a href="https://wearecaio.com" target="_blank" style="color:var(--ink-2);text-decoration:none;font-weight:600">wearecaio.com</a></div>
+    </div>
+  </div>
+</aside>
+
+  <section class="stageWrap">
+    <div class="stageTitle">Live preview</div>
+    <div class="stageScale" id="stageScale"><div id="stageInner">
+    <div id="stage">
+      <div class="cell">
+        <div class="chrome">
+          <div class="titlebar"><span><span class="dot" id="hdr_dot"></span><span id="brand_out">CHAT</span></span><span id="sub_out">assistant</span></div>
+          <div class="thread" id="thread"></div>
+        </div>
+        <div class="cell-footer" id="cell_footer">
+          <span id="f_left_out"></span>
+          <span class="fc" id="f_center_out"></span>
+          <span class="fr" id="f_right_out"></span>
+        </div>
+      </div>
+    </div>
+    </div></div>
+
+    <div class="stageTitle">Result</div>
+    <img id="preview" alt="Your exported GIF appears here" style="display:none" />
+    <div class="hint" id="hint">
+      Edit on the left, click <code>Export GIF</code> to render. By default plays once and stops.
+    </div>
+  </section>
+</div>
+
+<script>
+/* --------- state --------- */
+const S = { variant:"A" };
+function $(id){return document.getElementById(id);}
+function sync(){
+  S.brand=$("brand").value; S.sub=$("sub").value;
+  S.q=$("q").value; S.a=$("a").value;
+  S.q2=$("q2").value; S.a2=$("a2").value;
+  S.think=$("think").value;
+  S.show_av=$("show_av").checked;
+  S.show_footer=$("show_footer").checked;
+  S.f_left=$("f_left").value; S.f_center=$("f_center").value; S.f_right=$("f_right").value;
+  S.f_size=+$("f_size").value; S.f_bg=$("f_bg").value; S.f_fg=$("f_fg").value;
+  $("f_size_o").textContent=S.f_size;
+  $("f_left_out").textContent=S.f_left;
+  $("f_center_out").textContent=S.f_center;
+  $("f_right_out").textContent=S.f_right;
+  const footer=$("cell_footer");
+  footer.style.display = S.show_footer ? "flex" : "none";
+  footer.style.background = S.f_bg;
+  footer.style.color = S.f_fg;
+  footer.style.fontSize = S.f_size+"px";
+  const fScale = S.format ? ({auto_h:960,square_sm:420,square:960,portrait:960,landscape:1080,wide:720}[S.format]||420)/420 : 1;
+  S.f_height = +($("f_height")?.value || 28);
+  if($("f_height_o")) $("f_height_o").textContent = S.f_height;
+  const fPadV = Math.max(0, Math.round(((S.f_height * fScale) - S.f_size * 1.4) / 2));
+  footer.style.height = Math.round(S.f_height * fScale) + "px";
+  footer.style.padding = `${fPadV}px ${Math.round(18*fScale)}px`;
+  S.thread_pad_b = +($("thread_pad_b")?.value || 0);
+  if($("thread_pad_b_o")) $("thread_pad_b_o").textContent = S.thread_pad_b;
+  const threadEl = document.getElementById("thread");
+  if(threadEl) threadEl.style.paddingBottom = Math.round(S.thread_pad_b * fScale) + "px";
+  S.u_ic=$("u_ic").value; S.ai_ic=$("ai_ic").value;
+  S.u_icon=getSelectedIcon("u_pick"); S.ai_icon=getSelectedIcon("ai_pick");
+  S.u_avbg=$("u_avbg").value; S.u_avfg=$("u_avfg").value;
+  S.ai_avbg=$("ai_avbg").value; S.ai_avfg=$("ai_avfg").value;
+
+  // cell style
+  S.cell_radius=+($("cell_radius")?.value||18);
+  S.show_shadow=$("show_shadow")?.checked!==false;
+  S.shadow_intensity=+($("shadow_intensity")?.value||25);
+  $("cell_radius_o").textContent=S.cell_radius;
+  $("shadow_intensity_o").textContent=S.shadow_intensity;
+  // gradient
+  S.c_grad1=$("c_grad1")?.value||"#fafaf8"; S.c_grad2=$("c_grad2")?.value||"#e5e2dc";
+  S.grad_angle=+($("grad_angle")?.value||135);
+  if($("grad_angle_o")) $("grad_angle_o").textContent=S.grad_angle;
+  // apply cell radius + shadow
+  const cellEl = document.querySelector(".cell");
+  if(cellEl){
+    const rScale = (S.format ? ({auto_h:960,square_sm:420,square:960,portrait:960,landscape:1080,wide:720}[S.format]||420) : 420)/420;
+    cellEl.style.borderRadius = (S.cell_radius*rScale)+"px";
+    if(S.show_shadow){
+      const si = S.shadow_intensity/100;
+      cellEl.style.boxShadow = `0 1px 0 oklch(0.88 0.004 80), 0 ${Math.round(18*rScale)}px ${Math.round(40*rScale)}px -${Math.round(24*rScale)}px oklch(0.2 0.01 80 / ${si})`;
+    } else {
+      cellEl.style.boxShadow = "none";
+    }
+  }
+  // apply canvas background
+  const stageEl = $("stage");
+  if(bgType==="gradient"){
+    stageEl.style.background = `linear-gradient(${S.grad_angle}deg, ${S.c_grad1}, ${S.c_grad2})`;
+  } else if(bgType==="noise"){
+    // SVG noise pattern via data URI
+    stageEl.style.background = `${$("c_bg").value}`;
+    stageEl.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E")`;
+  } else {
+    stageEl.style.backgroundImage = "";
+    stageEl.style.background = $("c_bg").value;
+  }
+  S.speed=+$("speed").value; S.start=+$("start").value;
+  S.think_dur=+$("think_dur").value; S.tail=+$("tail").value; S.between=+$("between").value;
+  $("between_o").textContent=S.between;
+  S.auto_dur=$("auto_dur").checked;
+  S.fps=+$("fps").value; S.colors=+$("colors").value;
+  S.format=$("format").value;
+
+  // Compute natural stream length — mirror the timeline from renderBubbles
+  const between = S.between !== undefined ? S.between : 300;
+  const bubblesForCalc = [
+    {type:'user', text:S.q},
+    {type:'ai',   text:S.a},
+  ];
+  if(S.q2 && S.q2.trim()) bubblesForCalc.push({type:'user', text:S.q2});
+  if(S.a2 && S.a2.trim()) bubblesForCalc.push({type:'ai',   text:S.a2});
+  let calcCursor = (S.start !== undefined ? S.start : 200);
+  let streamStart = 0, streamEnd = 0;
+  for(let i=0;i<bubblesForCalc.length;i++){
+    const b = bubblesForCalc[i];
+    if(b.type==='user'){ calcCursor += between; }
+    else {
+      const ts = calcCursor + S.think_dur;
+      const st = (S.variant==="A") ? (b.text.match(/\S+\s*/g)||[]).length : b.text.length;
+      const se = ts + st*S.speed;
+      streamStart = ts; streamEnd = se;
+      calcCursor = se + between;
+    }
+  }
+  const steps = 0; // unused, kept for compat
+  const needed = streamEnd + S.tail + 400; // +400 for caret fade-out buffer
+  const userDur = +$("dur").value*1000;
+  // When auto is on, use `needed` directly so tail hold propagates. User slider acts as floor only when needed < slider — rare; easier semantics.
+  S.dur = S.auto_dur ? needed : userDur;
+  if(S.auto_dur){
+    const s = Math.max(0.5, Math.round(S.dur/500)/2);
+    $("dur").value = s.toFixed(1);
+  }
+  $("auto_info").textContent =
+    `stream: ${(streamEnd/1000).toFixed(1)}s · needed: ${(needed/1000).toFixed(1)}s · using: ${(S.dur/1000).toFixed(1)}s`;
+  $("think_dur_o").textContent=S.think_dur;
+  $("tail_o").textContent=S.tail;
+  $("brand_out").textContent=S.brand;
+  $("sub_out").textContent=S.sub;
+  $("speed_o").textContent=S.speed;
+  $("start_o").textContent=S.start;
+  $("dur_o").textContent=(S.dur/1000).toFixed(1);
+  $("fps_o").textContent=S.fps;
+  $("colors_o").textContent=S.colors;
+
+  // size
+  const sizes = {
+    square_sm:  [480,  480,  420,  420],
+    square:     [1080, 1080, 960,  960],
+    portrait:   [1080, 1350, 960,  1230],
+    landscape:  [1200, 628,  1080, 508],
+    wide:       [800,  500,  720,  440],
+  };
+  S.h_adjust = +($("h_adjust")?.value||0);
+  if($("h_adjust_o")) $("h_adjust_o").textContent = (S.h_adjust>=0?"+":"")+S.h_adjust+" px";
+  const hRow2 = $("h_adjust_row");
+  if(hRow2) hRow2.style.display = S.format==="auto_h" ? "none" : "flex";
+  const [sw_b2,sh_b2,cw,ch_b2] = sizes[S.format];
+  const sw=sw_b2, sh=Math.max(100, sh_b2 + S.h_adjust), ch=Math.max(80, ch_b2 + S.h_adjust);
+  const stage = $("stage");
+  stage.style.setProperty("--sw",sw+"px");
+  stage.style.setProperty("--sh",sh+"px");
+  stage.style.setProperty("--cw",cw+"px");
+  stage.style.setProperty("--ch",ch+"px");
+
+  // Auto-height: compute cell height from current thread content
+  if(S.format === "auto_h"){
+    const threadMeasure = document.getElementById("thread");
+    const cellEl2 = document.querySelector(".cell");
+    const chromeEl = document.querySelector(".chrome");
+    const titlebarEl = document.querySelector(".titlebar");
+    const footerEl2 = document.getElementById("cell_footer");
+    if(threadMeasure && cellEl2){
+      // temporarily unlock height to measure
+      cellEl2.style.height = "auto";
+      chromeEl.style.height = "auto";
+      chromeEl.style.flex = "none";
+      const titleH = titlebarEl ? titlebarEl.offsetHeight + 14 : 60;
+      const threadH = threadMeasure.scrollHeight;
+      const footerH = (S.show_footer && footerEl2) ? footerEl2.offsetHeight : 0;
+      const pad = 18*scale*2 + 14*scale + (S.thread_pad_b||0)*scale;
+      const computedCH = Math.max(200, titleH + threadH + footerH + pad);
+      sh = Math.round(computedCH + 40*scale); // stage = cell + padding
+      ch = Math.round(computedCH);
+      stage.style.setProperty("--sh", sh+"px");
+      stage.style.setProperty("--ch", ch+"px");
+      stage.style.height = sh+"px";
+      cellEl2.style.height = ch+"px";
+      chromeEl.style.height = "";
+      chromeEl.style.flex = "";
+    }
+  }
+    stage.style.width = sw+"px"; stage.style.height = sh+"px";
+  const cell = stage.querySelector(".cell");
+  cell.style.width = cw+"px"; cell.style.height = ch+"px";
+
+  // Scale fonts + spacing proportionally to cell width (base = 420px)
+  const scale = cw / 420;
+  const chrome = cell.querySelector(".chrome");
+  chrome.style.padding = `${18*scale}px ${18*scale}px ${16*scale}px`;
+  cell.style.borderRadius = `${18*scale}px`;
+  cell.querySelector(".titlebar").style.fontSize = `${Math.round(11*Math.pow(scale,0.72))}px`;
+  cell.querySelector(".titlebar").style.paddingBottom = `${14*scale}px`;
+  cell.querySelector(".thread").style.paddingTop = `${18*scale}px`;
+  cell.querySelector(".thread").style.gap = `${14*scale}px`;
+  // Set CSS vars for dynamic elements (bubbles, avatars) created in render
+  S.bubble_font_scale = +($("bubble_font_scale")?.value || 1.0);
+  S.bubble_max_w = +($("bubble_max_w")?.value || 78);
+  if($("bubble_font_scale_o")) $("bubble_font_scale_o").textContent = S.bubble_font_scale.toFixed(2);
+  if($("bubble_max_w_o")) $("bubble_max_w_o").textContent = S.bubble_max_w;
+  stage.style.setProperty("--bubble-font", `${15*scale*S.bubble_font_scale}px`);
+  stage.style.setProperty("--bubble-mono-font", `${13.5*scale*S.bubble_font_scale}px`);
+  stage.style.setProperty("--bubble-max-w", S.bubble_max_w+"%");
+  stage.style.setProperty("--avatar-size", `${26*scale}px`);
+  stage.style.setProperty("--bubble-pad", `${10*scale}px ${13*scale}px`);
+  stage.style.setProperty("--bubble-radius", `${14*scale}px`);
+  stage.style.setProperty("--status-font", `${11*scale}px`);
+
+  // colors
+  stage.style.background = $("c_bg").value;
+  stage.style.setProperty("--cbg", $("c_bg").value);
+  stage.style.setProperty("--cell-bg", $("c_cell").value);
+  stage.style.setProperty("--cell-line", $("c_line").value);
+  stage.style.setProperty("--header-line", $("c_hline").value);
+  // line widths
+  S.b_line = +$("b_line").value;
+  S.b_hline = +$("b_hline").value;
+  $("b_line_o").textContent = S.b_line;
+  $("b_hline_o").textContent = S.b_hline;
+  const sizes2 = {auto_h:[1080,0,960,0],square_sm:[480,480,420,420],square:[1080,1080,960,960],portrait:[1080,1350,960,1230],landscape:[1200,628,1080,508],wide:[800,500,720,440]};
+  const [,, cw2] = sizes2[S.format] || sizes2.square_sm;
+  const borderScale = cw2 / 420;
+  stage.style.setProperty("--b-line", (S.b_line * borderScale) + "px");
+  stage.style.setProperty("--b-hline", (S.b_hline * borderScale) + "px");
+  stage.style.setProperty("--dot-color", $("c_dot").value);
+  stage.style.setProperty("--bubble-user-bg", $("c_user").value);
+  stage.style.setProperty("--bubble-user-fg", $("c_userfg").value);
+  stage.style.setProperty("--bubble-ai-bg", $("c_ai").value);
+  stage.style.setProperty("--bubble-ai-fg", $("c_aifg").value);
+
+  try{
+    const snap={};document.querySelectorAll("input,textarea,select").forEach(n=>{if(n.id)snap[n.id]=n.value;});
+    snap._variant=S.variant;
+    localStorage.setItem("streamgif_state1", JSON.stringify(snap));
+  }catch(e){}
+  updateHdrDot();
+}
+function restore(){
+  try{
+    const s=JSON.parse(localStorage.getItem("streamgif_state1")||"null"); if(!s) return;
+    for(const k in s){ const n=document.getElementById(k); if(n) n.value=s[k]; }
+    if(s._variant) S.variant=s._variant;
+    document.querySelectorAll("#variant button").forEach(b=>b.classList.toggle("on", b.dataset.v===S.variant));
+  }catch(e){}
+}
+
+/* --------- icon library --------- */
+const ICONS = {
+  none:    null,
+  user:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>',
+  person:  '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8z"/></svg>',
+  brain:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3v-17zM12 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3"/></svg>',
+  bot:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4"/><circle cx="12" cy="3" r="1" fill="currentColor"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg>',
+  sparkle: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>',
+  star:    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.8 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>',
+  bolt:    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+  heart:   '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C.8 9 2.5 5 6 5c2 0 3.5 1 4.5 2.5.5.7 1 1.5 1.5 1.5s1-.8 1.5-1.5C14.5 6 16 5 18 5c3.5 0 5.2 4 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+  chat:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4V5z"/></svg>',
+  diamond: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l10 10-10 10L2 12z"/></svg>',
+  circle:  '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>',
+  square:  '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>',
+  triangle:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l10 18H2z"/></svg>',
+  hex:     '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9 5v10l-9 5-9-5V7z"/></svg>',
+  at:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0c0-6-4-10-10-10S2 7 2 13s4 10 10 10c2 0 4-.5 5.5-1.5"/></svg>',
+};
+const ICON_ORDER = ["none","user","person","brain","bot","sparkle","star","bolt","heart","chat","diamond","circle","square","triangle","hex","at"];
+
+function buildPicker(id, defaultKey){
+  const pick = document.getElementById(id);
+  pick.innerHTML = "";
+  ICON_ORDER.forEach(k=>{
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.icon = k;
+    b.title = k;
+    b.innerHTML = ICONS[k] || '<span style="font-size:9px;font-family:ui-monospace,Menlo,Consolas,monospace">—</span>';
+    pick.appendChild(b);
+  });
+  pick.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button"); if(!btn) return;
+    pick.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    btn.classList.add("on");
+    // clear text input when picking SVG (only for avatar pickers)
+    const which = id==="u_pick" ? "u_ic" : id==="ai_pick" ? "ai_ic" : null;
+    if(which) document.getElementById(which).value = "";
+    sync();
+  });
+  const start = pick.querySelector(`button[data-icon="${defaultKey}"]`);
+  if(start) start.classList.add("on");
+}
+buildPicker("u_pick", "user");
+buildPicker("ai_pick", "sparkle");
+buildPicker("hdr_pick", "none");
+
+// Avatar SVG uploads
+let uSvgData = null, aiSvgData = null;
+function setupAvatarUpload(uploadId, clearId, dataSetter, pickId, textId){
+  document.getElementById(uploadId).addEventListener("change", function(){
+    const file = this.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      dataSetter(e.target.result);
+      // clear picker + text
+      document.querySelectorAll(`#${pickId} button`).forEach(b=>b.classList.remove("on"));
+      document.getElementById(textId).value = "";
+      sync();
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById(clearId).addEventListener("click", ()=>{
+    dataSetter(null);
+    document.getElementById(uploadId).value="";
+    sync();
+  });
+}
+setupAvatarUpload("u_svg_upload",  "u_svg_clear",  v=>{ uSvgData=v; },  "u_pick",  "u_ic");
+setupAvatarUpload("ai_svg_upload", "ai_svg_clear", v=>{ aiSvgData=v; }, "ai_pick", "ai_ic");
+
+// When picking a default icon, clear custom SVG
+const _origUPickListener = null;
+document.getElementById("u_pick").addEventListener("click", ()=>{ uSvgData=null; document.getElementById("u_svg_upload").value=""; });
+document.getElementById("ai_pick").addEventListener("click", ()=>{ aiSvgData=null; document.getElementById("ai_svg_upload").value=""; });
+
+// Header icon picker sync — clear custom SVG when picking a default icon
+document.getElementById("hdr_pick").addEventListener("click", ()=>{
+  hdrSvgData = null;
+  document.getElementById("hdr_svg_upload").value="";
+  document.getElementById("hdr_svg_preview").style.display="none";
+  document.getElementById("hdr_svg_preview").innerHTML="";
+  sync();
+});
+
+// SVG upload
+let hdrSvgData = null;
+document.getElementById("hdr_svg_upload").addEventListener("change", function(){
+  const file = this.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    hdrSvgData = e.target.result; // raw SVG string
+    // clear picker selection
+    document.querySelectorAll("#hdr_pick button").forEach(b=>b.classList.remove("on"));
+    const prev = document.getElementById("hdr_svg_preview");
+    prev.innerHTML = hdrSvgData;
+    prev.style.display = "block";
+    sync();
+  };
+  reader.readAsText(file);
+});
+document.getElementById("hdr_svg_clear").addEventListener("click", ()=>{
+  hdrSvgData = null;
+  document.getElementById("hdr_svg_upload").value="";
+  document.getElementById("hdr_svg_preview").style.display="none";
+  sync();
+});
+
+function updateHdrDot(){
+  const dot = document.getElementById("hdr_dot");
+  if(!dot) return;
+  const selIcon = getSelectedIcon("hdr_pick");
+  const dotColor = document.getElementById("c_dot").value;
+  if(hdrSvgData){
+    dot.className="dot icon";
+    dot.innerHTML = hdrSvgData;
+    dot.style.background = "none";
+    dot.style.color = dotColor;
+  } else if(selIcon && selIcon!=="none" && ICONS[selIcon]){
+    dot.className="dot icon";
+    dot.innerHTML = ICONS[selIcon];
+    dot.style.background = "none";
+    dot.style.color = dotColor;
+  } else {
+    dot.className="dot";
+    dot.innerHTML="";
+    dot.style.background = dotColor;
+    dot.style.color="";
+  }
+}
+
+function getSelectedIcon(pickId){
+  const btn = document.querySelector(`#${pickId} button.on`);
+  return btn ? btn.dataset.icon : "none";
+}
+function setAvatarContent(av, iconKey, text, customSvg){
+  av.innerHTML = "";
+  av.style.overflow = "hidden"; // ensure SVG stays in circle
+  if(customSvg){
+    av.innerHTML = customSvg;
+    const svg = av.querySelector("svg");
+    if(svg){ svg.style.cssText = "width:65%;height:65%;display:block;margin:auto;color:inherit;flex-shrink:0"; }
+  } else if(text && text.length){
+    av.textContent = text;
+  } else if(iconKey && iconKey !== "none" && ICONS[iconKey]){
+    av.innerHTML = ICONS[iconKey];
+    const svg = av.querySelector("svg");
+    if(svg){ svg.style.cssText = "width:60%;height:60%;display:block;margin:auto;color:inherit;"; }
+  }
+}
+
+/* --------- render --------- */
+function el(t,c,x){const n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n;}
+function userRow(text){
+  const row=el("div","row user");
+  row.appendChild(el("div","bubble user",text));
+  if(S.show_av){
+    const av=el("div","avatar u");
+    setAvatarContent(av, S.u_icon, S.u_ic, uSvgData);
+    av.style.background=S.u_avbg; av.style.color=S.u_avfg;
+    row.appendChild(av);
+  }
+  return row;
+}
+function aiShell(extra=""){
+  const row=el("div","row ai");
+  const b=el("div","bubble ai "+extra);
+  if(S.show_av){
+    const av=el("div","avatar");
+    setAvatarContent(av, S.ai_icon, S.ai_ic, aiSvgData);
+    av.style.background=S.ai_avbg; av.style.color=S.ai_avfg;
+    row.appendChild(av);
+  }
+  row.appendChild(b);
+  return {row,bubble:b};
+}
+function statusRow(text,live=true){
+  const s=el("div","status"+(live?" live":""));
+  s.appendChild(el("span","pulse"));
+  s.appendChild(el("span",null,text));
+  return s;
+}
+
+function renderBubbles(thread, t, streamVariant){
+  // Build list of non-empty bubbles in order: Q1, A1, Q2(opt), A2(opt)
+  const bubbles = [
+    {type:'user', text:S.q},
+    {type:'ai',   text:S.a},
+  ];
+  if(S.q2 && S.q2.trim()) bubbles.push({type:'user', text:S.q2});
+  if(S.a2 && S.a2.trim()) bubbles.push({type:'ai',   text:S.a2});
+
+  thread.innerHTML = "";
+  if(t < 200) return;
+
+  // Build a deterministic timeline for all bubbles
+  // User bubbles appear instantly; AI bubbles have thinking + stream phases
+  const BETWEEN = S.between !== undefined ? S.between : 300;
+  let cursor = (S.start !== undefined ? S.start : 200);
+  const timeline = [];
+  for(let i=0; i<bubbles.length; i++){
+    const b = bubbles[i];
+    if(b.type === 'user'){
+      timeline.push({...b, showAt: cursor});
+      cursor += BETWEEN;
+    } else {
+      const thinkStart = cursor;
+      const streamStart = thinkStart + S.think_dur;
+      const steps = streamVariant==="A"
+        ? (b.text.match(/\S+\s*/g)||[]).length
+        : b.text.length;
+      const streamEnd = streamStart + steps * S.speed;
+      timeline.push({...b, showAt: cursor, thinkStart, streamStart, streamEnd, isLast: false});
+      cursor = streamEnd + BETWEEN;
+    }
+  }
+  // Mark last item
+  timeline[timeline.length-1].isLast = true;
+
+  // Render
+  for(let i=0; i<timeline.length; i++){
+    const item = timeline[i];
+    if(t < item.showAt) break;
+
+    if(item.type === 'user'){
+thread.appendChild(userRow(item.text));
+    } else {
+// thinking phase
+      if(S.think_dur > 0 && t >= item.thinkStart && t < item.streamStart){
+        thread.appendChild(statusRow(S.think, true));
+        return;
+      }
+      if(t < item.streamStart) return;
+
+      if(!item.isLast){
+        // show fully, no streaming
+        const {row,bubble} = aiShell();
+        bubble.textContent = item.text;
+        thread.appendChild(row);
+      } else {
+        // stream this one
+        if(streamVariant === "A"){
+          const tokens = item.text.match(/\S+\s*/g)||[];
+          const {row,bubble} = aiShell();
+          const span = el("span","tokens"); bubble.appendChild(span);
+          const done = Math.min(tokens.length, Math.floor((t-item.streamStart)/S.speed));
+          for(let j=0;j<done;j++){
+            const s=el("span","tok"); s.textContent=tokens[j]; span.appendChild(s);
+          }
+          if(done<tokens.length){
+            const f=((t-item.streamStart)-done*S.speed)/S.speed;
+            const s=el("span","tok"); s.textContent=tokens[done];
+            s.style.opacity=f.toFixed(3);
+            s.style.transform='translateY('+(1-f)*3+'px)';
+            s.style.filter='blur('+(1-f)*1.5+'px)';
+            span.appendChild(s);
+          }
+          thread.appendChild(row);
+        } else {
+          const {row,bubble} = aiShell("mono");
+          const span = el("span","tw");
+          const endT = item.streamStart + item.text.length*S.speed;
+          const n = Math.min(item.text.length, Math.floor((t-item.streamStart)/S.speed));
+          span.textContent = item.text.slice(0,n);
+          bubble.appendChild(span);
+          const caret = el("span","caret");
+          if(t >= endT){
+            caret.style.opacity = Math.max(0,1-(t-endT)/400).toFixed(3);
+          } else {
+            caret.style.opacity = (Math.floor(t/450)%2===0)?"1":"0";
+          }
+          bubble.appendChild(caret);
+          thread.appendChild(row);
+        }
+      }
+    }
+  }
+}
+
+function renderVariantA(thread,t){ renderBubbles(thread,t,"A"); }
+function renderVariantB(thread,t){ renderBubbles(thread,t,"B"); }
+
+function renderAt(t){
+  const thread=$("thread");
+  const tm=((t%S.dur)+S.dur)%S.dur;
+  if(S.variant==="A") renderVariantA(thread,tm);
+  else renderVariantB(thread,tm);
+}
+
+let startTs=performance.now();
+let tickPaused=false;
+function tick(){
+  if(!tickPaused) renderAt(performance.now()-startTs);
+  requestAnimationFrame(tick);
+}
+
+/* --------- inputs --------- */
+document.querySelectorAll("input,textarea,select").forEach(i=>i.addEventListener("input",sync));
+document.querySelectorAll("#variant button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#variant button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    S.variant=b.dataset.v;
+    sync();
+  });
+});
+$("btn_reset").addEventListener("click",()=>{localStorage.removeItem("streamgif_state1");location.reload();});
+
+// Sidebar resizer
+(function(){
+  const resizer = $("sidebarResizer");
+  const app = document.querySelector(".app");
+  let dragging=false, startX=0, startW=0;
+  resizer.addEventListener("mousedown", e=>{
+    dragging=true;
+    startX=e.clientX;
+    startW=document.querySelector(".sidebar").offsetWidth;
+    resizer.classList.add("dragging");
+    document.body.style.userSelect="none";
+    document.body.style.cursor="col-resize";
+  });
+  window.addEventListener("mousemove", e=>{
+    if(!dragging) return;
+    const w = Math.min(600, Math.max(240, startW+(e.clientX-startX)));
+    app.style.gridTemplateColumns = w+"px 1fr";
+    document.documentElement.style.setProperty("--sidebar-w", w+"px");
+    requestAnimationFrame(scalePreview);
+  });
+  window.addEventListener("mouseup", ()=>{
+    if(!dragging) return;
+    dragging=false;
+    resizer.classList.remove("dragging");
+    document.body.style.userSelect="";
+    document.body.style.cursor="";
+  });
+})();
+
+
+/* ─── THEMES ─────────────────────────────────────────────────────────── */
+const THEMES = [
+  {name:"Default",    c_bg:"#fafaf8",c_cell:"#ffffff",c_line:"#e5e2dc",c_hline:"#e5e2dc",c_dot:"#1a1916",c_user:"#1a1916",c_userfg:"#ffffff",c_ai:"#f1ede5",c_aifg:"#1a1916",f_bg:"#f1ede5",f_fg:"#888078"},
+  {name:"Dark",       c_bg:"#111110",c_cell:"#1c1c1a",c_line:"#2e2e2b",c_hline:"#2e2e2b",c_dot:"#ffffff",c_user:"#ffffff",c_userfg:"#111110",c_ai:"#252522",c_aifg:"#e8e4dc",f_bg:"#252522",f_fg:"#666660"},
+  {name:"Ocean",      c_bg:"#0d1b2a",c_cell:"#1b2d45",c_line:"#2a4060",c_hline:"#2a4060",c_dot:"#4db8ff",c_user:"#4db8ff",c_userfg:"#0d1b2a",c_ai:"#162236",c_aifg:"#b8d8f0",f_bg:"#162236",f_fg:"#4d7a99"},
+  {name:"Warm",       c_bg:"#fdf6ec",c_cell:"#fffaf4",c_line:"#e8d5bc",c_hline:"#e8d5bc",c_dot:"#c4751a",c_user:"#c4751a",c_userfg:"#ffffff",c_ai:"#f5e8d0",c_aifg:"#7a4010",f_bg:"#f5e8d0",f_fg:"#c4751a"},
+  {name:"Mint",       c_bg:"#f0faf5",c_cell:"#ffffff",c_line:"#c0e8d4",c_hline:"#c0e8d4",c_dot:"#1a7a4a",c_user:"#1a7a4a",c_userfg:"#ffffff",c_ai:"#e0f5ea",c_aifg:"#1a5a38",f_bg:"#e0f5ea",f_fg:"#1a7a4a"},
+  {name:"Purple",     c_bg:"#1a1025",c_cell:"#251535",c_line:"#3a2055",c_hline:"#3a2055",c_dot:"#c084fc",c_user:"#c084fc",c_userfg:"#1a1025",c_ai:"#2d1a45",c_aifg:"#e0c4fc",f_bg:"#2d1a45",f_fg:"#9050c0"},
+  {name:"Slate",      c_bg:"#f1f5f9",c_cell:"#ffffff",c_line:"#cbd5e1",c_hline:"#cbd5e1",c_dot:"#334155",c_user:"#334155",c_userfg:"#ffffff",c_ai:"#e2e8f0",c_aifg:"#1e293b",f_bg:"#e2e8f0",f_fg:"#64748b"},
+  {name:"Brand Blue", c_bg:"#eff6ff",c_cell:"#ffffff",c_line:"#bfdbfe",c_hline:"#bfdbfe",c_dot:"#1d4ed8",c_user:"#1d4ed8",c_userfg:"#ffffff",c_ai:"#dbeafe",c_aifg:"#1e3a8a",f_bg:"#dbeafe",f_fg:"#1d4ed8"},
+];
+(function buildThemePills(){
+  const pills = document.getElementById("theme_pills");
+  THEMES.forEach(theme=>{
+    const b = document.createElement("button");
+    b.className = "theme-pill";
+    b.textContent = theme.name;
+    b.addEventListener("click", ()=>{
+      Object.keys(theme).forEach(k=>{
+        if(k==="name") return;
+        const el = document.getElementById(k);
+        if(el) el.value = theme[k];
+      });
+      sync();
+    });
+    pills.appendChild(b);
+  });
+})();
+
+/* ─── GOOGLE FONTS ─────────────────────────────────────────────────────── */
+let currentFont = null;
+const FONT_LIST = [
+  "Inter","Roboto","Open Sans","Lato","Poppins","Montserrat","Raleway","Nunito",
+  "Playfair Display","Merriweather","Lora","Cormorant Garamond","EB Garamond",
+  "Source Sans 3","IBM Plex Sans","IBM Plex Mono","Fira Code","Space Mono",
+  "DM Sans","DM Serif Display","Outfit","Syne","Fraunces","Instrument Serif",
+  "Plus Jakarta Sans","Geist","Geist Mono","Space Grotesk","Bricolage Grotesque",
+  "Work Sans","Josefin Sans","Mulish","Quicksand","Karla","Manrope","Figtree",
+];
+function loadGoogleFont(family){
+  const id = "gf_" + family.replace(/s/g,"_");
+  if(document.getElementById(id)) return;
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(family) + ":wght@400;500;600;700&display=swap";
+  document.head.appendChild(link);
+}
+function applyFont(family){
+  if(!family){ currentFont=null; document.getElementById("font_current").textContent="Current: Helvetica (system)"; return; }
+  loadGoogleFont(family);
+  currentFont = family;
+  document.getElementById("font_current").textContent = "Current: " + family;
+  document.getElementById("stage").style.fontFamily = '"' + family + '", Helvetica, "Helvetica Neue", Arial, sans-serif';
+  // also inject into wrapper CSS for export
+}
+(function setupFontSearch(){
+  const input = document.getElementById("font_search");
+  const results = document.getElementById("font_results");
+  input.addEventListener("input", ()=>{
+    const q = input.value.trim().toLowerCase();
+    if(!q){ results.classList.remove("open"); return; }
+    const matches = FONT_LIST.filter(f=>f.toLowerCase().includes(q)).slice(0,10);
+    results.innerHTML = matches.map(f=>'<div class="font-result" data-font="'+f+'">'+f+'</div>').join("");
+    results.classList.toggle("open", matches.length>0);
+  });
+  results.addEventListener("click", e=>{
+    const btn = e.target.closest(".font-result"); if(!btn) return;
+    const family = btn.dataset.font;
+    applyFont(family);
+    input.value = family;
+    results.classList.remove("open");
+    sync();
+  });
+  document.addEventListener("click", e=>{ if(!e.target.closest(".font-search")) results.classList.remove("open"); });
+  document.getElementById("font_reset").addEventListener("click", ()=>{
+    applyFont(null);
+    input.value="";
+    document.getElementById("stage").style.fontFamily="";
+    sync();
+  });
+})();
+
+/* ─── CELL STYLE ─────────────────────────────────────────────────────── */
+let bgType = "solid";
+document.querySelectorAll(".bg-type-btn").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    bgType = b.dataset.bg;
+    document.querySelectorAll(".bg-type-btn").forEach(x=>{
+      x.classList.toggle("on",x===b);
+      x.style.background = x===b ? "var(--ink)" : "#fff";
+      x.style.color = x===b ? "#fff" : "var(--ink)";
+      x.style.borderColor = x===b ? "var(--ink)" : "var(--line)";
+    });
+    document.getElementById("bg_gradient_controls").style.display = bgType==="gradient" ? "block" : "none";
+    sync();
+  });
+});
+
+
+// Corner radius presets
+document.querySelectorAll(".radius-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.getElementById("cell_radius").value = b.dataset.r;
+    document.querySelectorAll(".radius-btn").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    sync();
+  });
+});
+
+/* ─── PARTICIPANT NAMES ──────────────────────────────────────────────── */
+// wired into sync() below via S.u_name / S.ai_name
+
+/* ─── SAVE / LOAD CONFIG ─────────────────────────────────────────────── */
+document.getElementById("btn_save_cfg").addEventListener("click", ()=>{
+  const snap = {};
+  document.querySelectorAll("input,textarea,select").forEach(n=>{ if(n.id) snap[n.id]=n.value; });
+  snap._variant = S.variant;
+  snap._bgType = bgType;
+  snap._currentFont = currentFont;
+  const blob = new Blob([JSON.stringify(snap,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="chat-stream-config.json"; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("btn_load_cfg").addEventListener("change", function(){
+  const file = this.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const s = JSON.parse(e.target.result);
+      for(const k in s){
+        if(k.startsWith("_")) continue;
+        const n = document.getElementById(k); if(n) n.value = s[k];
+      }
+      if(s._variant){ S.variant=s._variant; document.querySelectorAll("#variant button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.variant)); }
+      if(s._bgType){ bgType=s._bgType; }
+      if(s._currentFont) applyFont(s._currentFont);
+      sync();
+    }catch(e){ alert("Invalid config file"); }
+  };
+  reader.readAsText(file);
+  this.value="";
+});
+
+
+
+/* ─── COLLAPSIBLE SECTIONS ──────────────────────────────────────────── */
+document.querySelectorAll(".fs-toggle").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const wrap = document.getElementById(btn.dataset.target);
+    if(wrap) wrap.classList.toggle("open");
+  });
+});
+
+restore(); sync(); tick();
+
+// Scale preview to fit available width
+function scalePreview(){
+  const inner = document.getElementById("stageInner");
+  const wrap = document.getElementById("stageScale");
+  const avail = wrap.offsetWidth - 4;
+  const sw = $("stage").offsetWidth;
+  const sc = Math.min(1, avail / sw);
+  inner.style.transform = `scale(${sc})`;
+  inner.style.transformOrigin = "top center";
+  wrap.style.height = ($("stage").offsetHeight * sc + 8) + "px";
+}
+// Also call scalePreview on sync (format change triggers it)
+const _origSync = sync;
+// Hook into format changes
+$("format").addEventListener("change", ()=>{ requestAnimationFrame(scalePreview); });
+window.addEventListener("resize", scalePreview);
+requestAnimationFrame(scalePreview);
+
+/* --------- GIF export --------- */
+let gifencMod=null;
+async function loadGifenc(){
+  if(gifencMod) return gifencMod;
+  const r=await fetch("https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.js");
+  const src=await r.text();
+  const mod={};
+  new Function("module","exports",src)({exports:mod},mod);
+  gifencMod=mod;
+  return mod;
+}
+
+async function exportGif(){
+  const btn=$("btn_export"), status=$("status");
+  btn.disabled=true; btn.textContent='Exporting…'; status.textContent="Loading encoder…";
+  tickPaused=true;
+  try{
+    const {GIFEncoder,quantize,applyPalette}=await loadGifenc();
+    // Render first frame so auto_h can measure content
+    renderAt(0);
+    await new Promise(r=>setTimeout(r,50));
+    const stage=$("stage");
+    const W=stage.offsetWidth, H=stage.offsetHeight;
+
+    let cssText="";
+    for(const sh of document.styleSheets){
+      try{ for(const r of sh.cssRules) cssText+=r.cssText+"\n"; }catch(e){}
+    }
+
+    const FPS=S.fps;
+    const nFrames=Math.max(2, Math.round(S.dur/1000*FPS));
+    const FRAME_MS=S.dur/nFrames; // ensures nFrames*FRAME_MS === S.dur exactly
+    const canvas=document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    const gif=GIFEncoder();
+    const gifLoop = $("gif_loop")?.checked ? 0 : -1;
+
+    for(let i=0;i<nFrames;i++){
+      renderAt(i*FRAME_MS);
+      await new Promise(r=>setTimeout(r,0)); // yield to browser without running tick
+      // For auto_h: recompute cell height based on current thread content
+      if(S.format==='auto_h'){
+        const cellEl = document.querySelector(".cell");
+        const chromeEl = document.querySelector(".chrome");
+        const threadEl = document.getElementById("thread");
+        const titlebarEl = document.querySelector(".titlebar");
+        const footerEl = document.getElementById("cell_footer");
+        if(cellEl && threadEl){
+          cellEl.style.height = "auto";
+          const titleH = titlebarEl ? titlebarEl.offsetHeight + 14 : 60;
+          const threadH = threadEl.scrollHeight;
+          const footerH = (S.show_footer && footerEl) ? footerEl.offsetHeight : 0;
+          const s = 960/420;
+          const padTotal = 18*s*2 + 14*s + (S.thread_pad_b||0)*s;
+          const newCH = Math.max(300, Math.ceil(titleH + threadH + footerH + padTotal));
+          const newSH = newCH + Math.round(40*s);
+          cellEl.style.height = newCH+"px";
+          stage.style.height = newSH+"px";
+        }
+      }
+
+      const clone=stage.cloneNode(true);
+      const cs=getComputedStyle(stage);
+      ["--cbg","--cell-bg","--cell-line","--header-line","--dot-color","--b-line","--b-hline","--bubble-user-bg","--bubble-user-fg","--bubble-ai-bg","--bubble-ai-fg","--bubble-max-w","--sw","--sh","--cw","--ch","--bubble-font","--bubble-mono-font","--avatar-size","--bubble-pad","--bubble-radius","--status-font"].forEach(v=>{
+        clone.style.setProperty(v, cs.getPropertyValue(v));
+      });
+      clone.style.borderRadius="0";
+      clone.style.fontFamily = 'Helvetica,"Helvetica Neue",Arial,sans-serif';
+      const wrapper=document.createElement("div");
+      wrapper.setAttribute("xmlns","http://www.w3.org/1999/xhtml");
+      // Use live stage dimensions (may change per-frame for auto_h)
+      const fW=stage.offsetWidth, fH=stage.offsetHeight;
+      if(fW!==canvas.width||fH!==canvas.height){canvas.width=fW;canvas.height=fH;}
+      wrapper.style.width=fW+"px"; wrapper.style.height=fH+"px";
+      const styleEl=document.createElement("style");
+      styleEl.textContent = cssText + `
+        * { font-family: ${currentFont ? '"'+currentFont+'",' : ''} Helvetica, "Helvetica Neue", Arial, sans-serif !important; }
+        .bubble.ai.mono, .tw, .caret { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
+        .titlebar, .status { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
+      `;
+      wrapper.appendChild(styleEl);
+      wrapper.appendChild(clone);
+      const ser=new XMLSerializer().serializeToString(wrapper);
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${fW}" height="${fH}" viewBox="0 0 ${fW} ${fH}"><foreignObject width="100%" height="100%">${ser}</foreignObject></svg>`;
+      const img=await new Promise((res,rej)=>{
+        const dataUrl="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+        const im=new Image();
+        im.onload=()=>res(im);
+        im.onerror=()=>rej(new Error("svg load failed"));
+        im.src=dataUrl;
+      });
+      ctx.fillStyle=$("c_bg").value||"#fafaf8";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      const {data,width,height}=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const palette=quantize(data,Math.min(256,S.colors),{format:"rgb444"});
+      const indexed=applyPalette(data,palette,"rgb444");
+            gif.writeFrame(indexed,width,height,{palette,delay:Math.max(2, Math.round(FRAME_MS/10)), repeat: i===0 ? gifLoop : undefined});
+
+      status.textContent=`Rendering ${i+1}/${nFrames}…`; const prog=document.getElementById('export_progress'); const bar=document.getElementById('export_progress_bar'); if(prog){prog.style.display='block';bar.style.width=((i+1)/nFrames*100)+'%';}
+    }
+    gif.finish();
+    const blob=new Blob([gif.bytes()],{type:"image/gif"});
+    const url=URL.createObjectURL(blob);
+    const img=$("preview"); img.src=url; img.style.display="block";
+    $("hint").innerHTML=`GIF ready — <a href="${url}" download="chat-stream.gif">download chat-stream.gif</a> (${(blob.size/1024).toFixed(0)} KB · ${nFrames} frames · ${S.fps} fps)`;
+    status.textContent="Done.";
+  }catch(e){
+    console.error(e);
+    status.textContent="Error: "+e.message;
+  }finally{ btn.disabled=false; btn.textContent='Export GIF'; tickPaused=false; startTs=performance.now(); }
+}
+$("btn_export").addEventListener("click",exportGif);
+</script>
+</body>
+</html>
