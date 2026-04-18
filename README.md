@@ -52,4 +52,4 @@ MIT License — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 
-Made with ♥ by [CAIO Group](https://caiogroup.com)
+Made with ♥ by Stefanos Karagos -  [CAIO Group](https://wearecaio.com)
