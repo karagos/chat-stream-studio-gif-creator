@@ -103,10 +103,11 @@
 
   /* Actions */
   .actions{
-    position:sticky;bottom:0;background:#fff;
-    margin:12px -22px 0;padding:14px 22px 20px;
+    position:sticky;bottom:-22px;background:#fff;z-index:50;
+    margin:16px -22px -24px;padding:14px 22px 18px;
     border-top:1px solid var(--line);
     display:flex;flex-direction:column;gap:8px;
+    box-shadow:0 -12px 20px -16px rgba(0,0,0,0.08);
   }
   .btn-export{
     font:inherit;font-size:13px;font-weight:700;padding:12px;
@@ -124,9 +125,9 @@
   .btn-action:hover{background:var(--chip);color:var(--ink)}
   label.btn-action{margin:0;cursor:pointer;}
   .sidebar-brand{
-    margin-top:12px;padding:12px 0 0;
+    margin-top:18px;padding:14px 0 8px;
     border-top:1px solid var(--line);
-    display:flex;flex-direction:column;gap:2px;
+    display:flex;flex-direction:column;gap:3px;
   }
   .brand-name{font-size:12px;font-weight:700;letter-spacing:-0.005em;color:var(--ink)}
   .brand-tagline{font-size:10.5px;color:var(--ink-2);line-height:1.4}
@@ -155,19 +156,67 @@
   .variant button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .variant button small{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;opacity:.7}
 
-  .actions{
-    position:sticky;bottom:0;background:#fff;margin:20px -22px 0;
-    padding:14px 22px;border-top:1px solid var(--line);
-    display:flex;gap:10px;align-items:center;
+  /* duplicate .actions rule removed — keep the first one with column layout */
+
+
+
+  /* Section search filter */
+  .section-search{position:relative;margin-bottom:12px}
+  .section-search input{
+    width:100%;font:inherit;font-size:12px;padding:8px 30px 8px 30px;
+    border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--ink);
   }
+  .section-search::before{
+    content:"⌕";position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    font-size:13px;color:var(--ink-3);pointer-events:none;
+  }
+  .section-search .clear-btn{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink-3);padding:2px 6px;
+    display:none;
+  }
+  .section-search.has-value .clear-btn{display:block}
+  .fs-wrap.filtered-out{display:none}
+  .fs-wrap.filtered-match{border-color:var(--ink)}
 
 
-  .stageWrap{padding:32px;display:flex;flex-direction:column;align-items:center;gap:22px;overflow:hidden}
-  .stageScale{display:flex;align-items:center;justify-content:center;width:100%}
-  .stageScale>div{ transform-origin:top center; }
+  /* Toast */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;
+    font-size:12.5px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.15);
+    opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;z-index:1000;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  
+  /* Playback controls */
+  .preview-controls{
+    display:flex;align-items:center;gap:10px;
+    width:100%;max-width:680px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:11px;color:var(--ink-3);
+  }
+  .ctrl-btn{
+    font:inherit;font-size:12px;font-weight:600;
+    padding:6px 14px;border-radius:7px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+    cursor:pointer;display:flex;align-items:center;gap:5px;
+  }
+  .ctrl-btn:hover{background:var(--chip)}
+  .ctrl-btn.playing{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .progress-bar-wrap{
+    flex:1;height:4px;background:var(--line);border-radius:2px;
+    cursor:pointer;position:relative;
+  }
+  .progress-bar-fill{height:100%;background:var(--ink);border-radius:2px;pointer-events:none;transition:width 0.05s linear}
+  .time-label{min-width:52px;text-align:right}
+  section.stageWrap{padding:24px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:16px;overflow-x:hidden;overflow-y:auto}
+  .preview-controls{width:100%;max-width:600px;display:flex;align-items:center;gap:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3)}
+  .stageScale{position:relative;width:100%}
+  .stageScale>div{position:absolute;top:0;left:0;transform-origin:top left}
   .stageTitle{
-    align-self:flex-start;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;
-    color:var(--ink-3);letter-spacing:0.08em;text-transform:uppercase;
+    font-size:14px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);
+    border-bottom:2px solid var(--ink);padding-bottom:4px;width:100%;
   }
   #stage{
     width:var(--sw,480px);height:var(--sh,480px);background:var(--cbg,#fafaf8);
@@ -185,7 +234,7 @@
   .cell-footer{
     padding:var(--footer-pad-v,8px) 18px;background:var(--footer-bg,#f1ede5);
     display:flex;align-items:center;justify-content:space-between;
-    font-family:Helvetica,"Helvetica Neue",Arial,sans-serif;
+    font-family:inherit;
     font-size:var(--footer-font,11px);color:var(--footer-fg,#888078);
     flex:0 0 auto;
   }
@@ -207,11 +256,15 @@
   .row.user{justify-content:flex-end}
   .avatar{width:var(--avatar-size,26px);height:var(--avatar-size,26px);border-radius:50%;background:var(--bubble-user-bg,#111);color:var(--bubble-user-fg,#fff);display:flex;align-items:center;justify-content:center;font-size:calc(var(--avatar-size,26px) * 0.42);font-weight:600;flex:0 0 var(--avatar-size,26px);overflow:hidden}
   .avatar.u{background:var(--chip-2);color:var(--ink)}
-  .bubble{max-width:var(--bubble-max-w,78%);padding:var(--bubble-pad,10px 13px);border-radius:var(--bubble-radius,14px);font-size:var(--bubble-font,15px);line-height:1.42;color:var(--ink);font-family:Helvetica,"Helvetica Neue",Arial,sans-serif}
-  .bubble.user{background:var(--bubble-user-bg,#111);color:var(--bubble-user-fg,#fff);border-bottom-right-radius:5px}
-  .bubble.ai{background:var(--bubble-ai-bg,oklch(0.955 0.004 80));color:var(--bubble-ai-fg,oklch(0.18 0.005 80));border-bottom-left-radius:5px}
+  .bubble{max-width:var(--bubble-max-w,78%);padding:var(--bubble-pad,10px 13px);border-radius:var(--bubble-radius,14px);font-size:var(--bubble-font,15px);line-height:1.42;color:var(--ink);font-family:inherit}
+  .bubble.user{background:var(--bubble-user-bg,#111);color:var(--bubble-user-fg,#fff);border-bottom-right-radius:var(--bubble-tail-radius-user,5px)}
+  .bubble.ai{background:var(--bubble-ai-bg,oklch(0.955 0.004 80));color:var(--bubble-ai-fg,oklch(0.18 0.005 80));border-bottom-left-radius:var(--bubble-tail-radius-ai,5px)}
   .bubble.ai.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:var(--bubble-mono-font,13.5px)}
   .tok{display:inline-block;white-space:pre}
+  .char{display:inline-block;white-space:pre}
+  .chars{display:inline}
+  .lines{display:block}
+  .line-reveal{display:block;margin-bottom:2px;transition:none}
   .tw{font-variant-ligatures:none;white-space:pre-wrap;word-break:break-word}
   .caret{display:inline-block;width:0.55ch;height:1em;vertical-align:-0.15em;background:var(--bubble-ai-fg,#111);margin-left:1px}
 .status{display:flex;align-items:center;gap:7px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:var(--status-font,11px);color:var(--ink-3);letter-spacing:0.06em;text-transform:uppercase;padding-left:calc(var(--avatar-size,26px) + 10px);height:calc(var(--status-font,11px) * 1.4)}
@@ -219,7 +272,7 @@
   @keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
   .status.live .pulse{animation:pulse 1.2s ease-in-out infinite}
 
-  #preview{max-width:680px;width:100%;border:1px solid var(--line);border-radius:8px;display:block;background:#fff}
+  #preview{max-width:600px;max-height:500px;width:auto;height:auto;border:1px solid var(--line);border-radius:8px;display:block;background:#fff;object-fit:contain}
   .hint{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3);max-width:680px;line-height:1.5}
   .hint code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:10.5px}
   .hint a{color:var(--ink);font-weight:600}
@@ -241,6 +294,7 @@
     background:#fff;cursor:pointer;color:var(--ink-2);transition:all 0.1s;
   }
   .theme-pill:hover{border-color:var(--ink);color:var(--ink)}
+  .theme-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 
   /* Google Fonts search */
   .font-search{position:relative}
@@ -273,6 +327,12 @@
     </div>
   </div>
 
+  <!-- SECTION SEARCH -->
+  <div class="section-search" id="section_search_wrap">
+    <input type="text" id="section_search" placeholder="Search settings…" aria-label="Filter settings"/>
+    <button class="clear-btn" id="section_search_clear" title="Clear search">×</button>
+  </div>
+
   <!-- QUICK START -->
   <div class="format-bar">
     <label style="margin:0 0 4px">Format</label>
@@ -285,12 +345,13 @@
       <option value="wide">800×500 — compact wide</option>
     </select>
     <div style="margin-top:8px;display:flex;align-items:center;gap:8px" id="h_adjust_row">
-      <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);white-space:nowrap">Height adjust</span>
+      <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);white-space:nowrap">Cell height (±)</span>
       <input type="range" id="h_adjust" min="-400" max="400" step="20" value="0" style="flex:1"/>
       <output id="h_adjust_o" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:var(--ink-2);min-width:38px;text-align:right">0 px</output>
     </div>
   </div>
 
+  <!-- QUICK START THEMES -->
   <div class="fs-wrap" id="fs_themes">
     <button class="fs-toggle" data-target="fs_themes">Quick start — Themes<span class="fs-arrow">▾</span></button>
     <div class="fs-body">
@@ -302,16 +363,25 @@
   <div class="fs-wrap" id="fs_content">
     <button class="fs-toggle" data-target="fs_content">Content<span class="fs-arrow">▾</span></button>
     <div class="fs-body">
-      <div class="variant" id="variant">
+      <div class="variant" id="variant" style="flex-wrap:wrap">
         <button data-v="A" class="on">Word stream<small>fade + rise</small></button>
         <button data-v="B">Typewriter<small>caret blink</small></button>
+        <button data-v="C">Char fade<small>letter-by-letter</small></button>
+        <button data-v="D">Line reveal<small>line-by-line</small></button>
+        <button data-v="E">Blur in<small>soft focus</small></button>
       </div>
       <div class="field-group" style="margin-top:12px">
-        <label class="bubble-label user-label">① User</label>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 4px">
+          <label class="bubble-label user-label" style="margin:0">① User</label>
+          <button class="btn-xs" type="button" data-dup-from="q" data-dup-to="q2" title="Copy to ③ User follow-up" style="padding:2px 7px;font-size:10px">↓ dup</button>
+        </div>
         <textarea id="q">What's a good way to start a morning?</textarea>
       </div>
       <div class="field-group">
-        <label class="bubble-label ai-label">② AI <span class="opt-tag">streams</span></label>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 4px">
+          <label class="bubble-label ai-label" style="margin:0">② AI <span class="opt-tag">streams</span></label>
+          <button class="btn-xs" type="button" data-dup-from="a" data-dup-to="a2" title="Copy to ④ AI reply" style="padding:2px 7px;font-size:10px">↓ dup</button>
+        </div>
         <textarea id="a">Try a 10-minute walk before checking your phone. Natural light sets your circadian rhythm and your first thought of the day ends up being your own.</textarea>
       </div>
       <div class="field-group">
@@ -382,48 +452,36 @@
     </div>
   </div>
 
-  <!-- ANIMATION -->
-  <div class="fs-wrap" id="fs_anim">
-    <button class="fs-toggle" data-target="fs_anim">Animation &amp; timing<span class="fs-arrow">▾</span></button>
+  <!-- FOOTER -->
+  <div class="fs-wrap" id="fs_footer">
+    <button class="fs-toggle" data-target="fs_footer">Footer bar<span class="fs-arrow">▾</span></button>
     <div class="fs-body">
-      <div class="row2">
+      <label class="check-label"><input type="checkbox" id="show_footer" checked/>Show footer</label>
+      <div class="row2" style="margin-top:10px">
+        <div><label>Left</label><input type="text" id="f_left" value="" placeholder="company name"/></div>
+        <div><label>Center</label><input type="text" id="f_center" value="" placeholder="tagline"/></div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <div><label>Right</label><input type="text" id="f_right" value="" placeholder="@handle"/></div>
         <div>
-          <label>Stream speed <span class="unit">ms/step</span></label>
-          <div class="range"><input type="range" id="speed" min="10" max="200" step="5" value="90"/><output id="speed_o">90</output></div>
+          <label>Font size <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="f_size" min="8" max="28" step="1" value="11"/><output id="f_size_o">11</output></div>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <div>
+          <label>Height <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="f_height" min="0" max="80" step="2" value="28"/><output id="f_height_o">28</output></div>
         </div>
         <div>
-          <label>Initial delay <span class="unit">ms</span></label>
-          <div class="range"><input type="range" id="start" min="0" max="2500" step="50" value="1000"/><output id="start_o">1000</output></div>
+          <label>Padding above <span class="unit">px</span></label>
+          <div class="range"><input type="range" id="thread_pad_b" min="0" max="60" step="2" value="0"/><output id="thread_pad_b_o">0</output></div>
         </div>
       </div>
       <div class="row2" style="margin-top:8px">
-        <div>
-          <label>Thinking duration <span class="unit">ms</span></label>
-          <div class="range"><input type="range" id="think_dur" min="0" max="3000" step="50" value="900"/><output id="think_dur_o">900</output></div>
-        </div>
-        <div>
-          <label>Gap between bubbles <span class="unit">ms</span></label>
-          <div class="range"><input type="range" id="between" min="0" max="2000" step="50" value="300"/><output id="between_o">300</output></div>
-        </div>
+        <div class="swatchrow"><input type="color" id="f_bg" value="#f1ede5"><span>footer bg</span></div>
+        <div class="swatchrow"><input type="color" id="f_fg" value="#888078"><span>footer text</span></div>
       </div>
-      <div class="row2" style="margin-top:8px">
-        <div>
-          <label>Tail hold <span class="unit">ms</span></label>
-          <div class="range"><input type="range" id="tail" min="0" max="5000" step="100" value="1500"/><output id="tail_o">1500</output></div>
-        </div>
-        <div>
-          <label>FPS</label>
-          <div class="range"><input type="range" id="fps" min="8" max="24" step="1" value="15"/><output id="fps_o">15</output></div>
-        </div>
-      </div>
-      <label class="check-label" style="margin-top:10px"><input type="checkbox" id="auto_dur" checked/>Auto-fit duration to text length</label>
-      <div class="row2" style="margin-top:8px">
-        <div>
-          <label>Duration <span class="unit">s</span></label>
-          <div class="range"><input type="range" id="dur" min="2" max="30" step="0.5" value="8"/><output id="dur_o">8.0</output></div>
-        </div>
-      </div>
-      <div id="auto_info" class="info-tag" style="margin-top:6px"></div>
     </div>
   </div>
 
@@ -439,6 +497,8 @@
         <div class="swatchrow"><input type="color" id="c_aifg" value="#1a1916"><span>AI text</span></div>
         <div class="swatchrow"><input type="color" id="c_dot" value="#1a1916"><span>header icon</span></div>
       </div>
+      <div class="section-divider">Bubble shape</div>
+      <label class="check-label"><input type="checkbox" id="bubble_tail" checked/>Show bubble tails (pointer corner)</label>
       <div class="section-divider">Lines</div>
       <div class="line-row"><input type="color" id="c_line" value="#e5e2dc"><span>cell border</span><div class="range"><input type="range" id="b_line" min="0" max="6" step="0.5" value="1"/><output id="b_line_o">1</output></div></div>
       <div class="line-row"><input type="color" id="c_hline" value="#e5e2dc"><span>header divider</span><div class="range"><input type="range" id="b_hline" min="0" max="6" step="0.5" value="1"/><output id="b_hline_o">1</output></div></div>
@@ -503,36 +563,48 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <div class="fs-wrap" id="fs_footer">
-    <button class="fs-toggle" data-target="fs_footer">Footer bar<span class="fs-arrow">▾</span></button>
+  <!-- ANIMATION -->
+  <div class="fs-wrap" id="fs_anim">
+    <button class="fs-toggle" data-target="fs_anim">Animation &amp; timing<span class="fs-arrow">▾</span></button>
     <div class="fs-body">
-      <label class="check-label"><input type="checkbox" id="show_footer" checked/>Show footer</label>
-      <div class="row2" style="margin-top:10px">
-        <div><label>Left</label><input type="text" id="f_left" value="" placeholder="company name"/></div>
-        <div><label>Center</label><input type="text" id="f_center" value="" placeholder="tagline"/></div>
-      </div>
-      <div class="row2" style="margin-top:6px">
-        <div><label>Right</label><input type="text" id="f_right" value="" placeholder="@handle"/></div>
+      <div class="row2">
         <div>
-          <label>Font size <span class="unit">px</span></label>
-          <div class="range"><input type="range" id="f_size" min="8" max="28" step="1" value="11"/><output id="f_size_o">11</output></div>
-        </div>
-      </div>
-      <div class="row2" style="margin-top:6px">
-        <div>
-          <label>Height <span class="unit">px</span></label>
-          <div class="range"><input type="range" id="f_height" min="0" max="80" step="2" value="28"/><output id="f_height_o">28</output></div>
+          <label>Stream speed <span class="unit">ms/step</span></label>
+          <div class="range"><input type="range" id="speed" min="10" max="200" step="5" value="90"/><output id="speed_o">90</output></div>
         </div>
         <div>
-          <label>Padding above <span class="unit">px</span></label>
-          <div class="range"><input type="range" id="thread_pad_b" min="0" max="60" step="2" value="0"/><output id="thread_pad_b_o">0</output></div>
+          <label>Initial delay <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="start" min="0" max="2500" step="50" value="1000"/><output id="start_o">1000</output></div>
         </div>
       </div>
       <div class="row2" style="margin-top:8px">
-        <div class="swatchrow"><input type="color" id="f_bg" value="#f1ede5"><span>footer bg</span></div>
-        <div class="swatchrow"><input type="color" id="f_fg" value="#888078"><span>footer text</span></div>
+        <div>
+          <label>Thinking duration <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="think_dur" min="0" max="3000" step="50" value="900"/><output id="think_dur_o">900</output></div>
+        </div>
+        <div>
+          <label>Gap between bubbles <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="between" min="0" max="2000" step="50" value="300"/><output id="between_o">300</output></div>
+        </div>
       </div>
+      <div class="row2" style="margin-top:8px">
+        <div>
+          <label>Tail hold <span class="unit">ms</span></label>
+          <div class="range"><input type="range" id="tail" min="0" max="5000" step="100" value="1500"/><output id="tail_o">1500</output></div>
+        </div>
+        <div>
+          <label>FPS</label>
+          <div class="range"><input type="range" id="fps" min="8" max="24" step="1" value="15"/><output id="fps_o">15</output></div>
+        </div>
+      </div>
+      <label class="check-label" style="margin-top:10px"><input type="checkbox" id="auto_dur" checked/>Auto-fit duration to text length</label>
+      <div class="row2" style="margin-top:8px">
+        <div>
+          <label>Duration <span class="unit">s</span></label>
+          <div class="range"><input type="range" id="dur" min="2" max="30" step="0.5" value="8"/><output id="dur_o">8.0</output></div>
+        </div>
+      </div>
+      <div id="auto_info" class="info-tag" style="margin-top:6px"></div>
     </div>
   </div>
 
@@ -544,31 +616,44 @@
           <label>Colors in palette</label>
           <div class="range"><input type="range" id="colors" min="16" max="256" step="8" value="64"/><output id="colors_o">64</output></div>
         </div>
-      <div id="size_hint" class="info-tag" style="margin-top:6px">For 1080px+ use ≤12 fps + 32 colors to stay under 5MB</div>
+      <div id="size_estimate" class="info-tag" style="margin-top:8px;padding:8px 10px;background:var(--chip);border-radius:6px;line-height:1.5">
+        <div><strong style="color:var(--ink)">Estimated size:</strong> <span id="est_size">—</span></div>
+        <div id="est_warning" style="color:#b8891a;margin-top:2px;display:none;font-weight:500"></div>
+      </div>
       <label class="check-label" style="margin-top:10px"><input type="checkbox" id="gif_loop"/>Loop GIF (uncheck = play once and stop)</label>
       <div id="export_progress" style="display:none;height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden"><div id="export_progress_bar" style="height:100%;width:0%;background:var(--ink);border-radius:2px;transition:width 0.1s"></div></div>
     </div>
   </div>
 
-  <!-- ACTION BAR -->
+  <!-- BRAND FOOTER (non-sticky, scrolls with content) -->
+  <div class="sidebar-brand">
+    <div class="brand-name">CAIO Group</div>
+    <div class="brand-tagline">Create AI Chat Animations Content for LinkedIn</div>
+    <div class="brand-license">Open source · MIT License · <a href="https://wearecaio.com" target="_blank" style="color:var(--ink-2);text-decoration:none;font-weight:600">wearecaio.com</a></div>
+  </div>
+
+  <!-- ACTION BAR (sticky to viewport bottom) -->
   <div class="actions">
     <button class="btn-export" id="btn_export">Export GIF</button>
     <div class="action-row">
-      <button class="btn-action" id="btn_save_cfg" title="Save settings to JSON">Save config</button>
-      <label class="btn-action" title="Load settings from JSON">Load config<input type="file" id="btn_load_cfg" accept=".json" style="display:none"/></label>
-      <button class="btn-action" id="btn_reset" title="Reset all settings">Reset</button>
+      <button class="btn-action" id="btn_save_cfg" title="Download current settings as JSON">Save config</button>
+      <label class="btn-action" title="Load settings from JSON file">Load config<input type="file" id="btn_load_cfg" accept=".json" style="display:none"/></label>
+      <button class="btn-action" id="btn_reset" title="Reset all settings to defaults">Reset</button>
     </div>
     <div id="status" class="export-status">Ready.</div>
-    <div class="sidebar-brand">
-      <div class="brand-name">CAIO Group</div>
-      <div class="brand-tagline">Create AI Chat Animations Content for LinkedIn</div>
-      <div class="brand-license">Open source · MIT License · <a href="https://wearecaio.com" target="_blank" style="color:var(--ink-2);text-decoration:none;font-weight:600">wearecaio.com</a></div>
-    </div>
   </div>
 </aside>
 
   <section class="stageWrap">
     <div class="stageTitle">Live preview</div>
+    <div class="preview-controls">
+      <button class="ctrl-btn playing" id="ctrl_play" title="Play / Pause">⏵ Play</button>
+      <button class="ctrl-btn" id="ctrl_restart" title="Restart">↺ Restart</button>
+      <div class="progress-bar-wrap" id="ctrl_progress">
+        <div class="progress-bar-fill" id="ctrl_fill" style="width:0%"></div>
+      </div>
+      <span class="time-label" id="ctrl_time">0.0s</span>
+    </div>
     <div class="stageScale" id="stageScale"><div id="stageInner">
     <div id="stage">
       <div class="cell">
@@ -686,8 +771,23 @@ function sync(){
     if(b.type==='user'){ calcCursor += between; }
     else {
       const ts = calcCursor + S.think_dur;
-      const st = (S.variant==="A") ? (b.text.match(/\S+\s*/g)||[]).length : b.text.length;
-      const se = ts + st*S.speed;
+      let se;
+      if(S.variant === "A" || S.variant === "E"){
+        const tokens = (b.text.match(/\S+\s*/g)||[]).length;
+        se = ts + tokens * S.speed;
+      } else if(S.variant === "B"){
+        se = ts + b.text.length * S.speed;
+      } else if(S.variant === "C"){
+        const charStride = Math.max(8, S.speed/3);
+        se = ts + (b.text.length-1) * charStride + S.speed;
+      } else if(S.variant === "D"){
+        const w = (b.text.match(/\S+\s*/g)||[]).length;
+        const lines = Math.max(1, Math.ceil(w/7));
+        se = ts + lines * S.speed * 6;
+      } else {
+        const tokens = (b.text.match(/\S+\s*/g)||[]).length;
+        se = ts + tokens * S.speed;
+      }
       streamStart = ts; streamEnd = se;
       calcCursor = se + between;
     }
@@ -703,6 +803,8 @@ function sync(){
   }
   $("auto_info").textContent =
     `stream: ${(streamEnd/1000).toFixed(1)}s · needed: ${(needed/1000).toFixed(1)}s · using: ${(S.dur/1000).toFixed(1)}s`;
+  // Estimated GIF size
+  updateSizeEstimate();
   $("think_dur_o").textContent=S.think_dur;
   $("tail_o").textContent=S.tail;
   $("brand_out").textContent=S.brand;
@@ -768,7 +870,7 @@ function sync(){
   const scale = cw / 420;
   const chrome = cell.querySelector(".chrome");
   chrome.style.padding = `${18*scale}px ${18*scale}px ${16*scale}px`;
-  cell.style.borderRadius = `${18*scale}px`;
+  cell.style.borderRadius = `${(S.cell_radius ?? 18)*scale}px`;
   cell.querySelector(".titlebar").style.fontSize = `${Math.round(11*Math.pow(scale,0.72))}px`;
   cell.querySelector(".titlebar").style.paddingBottom = `${14*scale}px`;
   cell.querySelector(".thread").style.paddingTop = `${18*scale}px`;
@@ -807,9 +909,15 @@ function sync(){
   stage.style.setProperty("--bubble-user-fg", $("c_userfg").value);
   stage.style.setProperty("--bubble-ai-bg", $("c_ai").value);
   stage.style.setProperty("--bubble-ai-fg", $("c_aifg").value);
+  // Bubble tail: when unchecked, all corners use full radius (no pointer corner)
+  const tailEl = $("bubble_tail");
+  const showTail = tailEl ? tailEl.checked : true;
+  const fullR = "var(--bubble-radius,14px)";
+  stage.style.setProperty("--bubble-tail-radius-user", showTail ? "5px" : fullR);
+  stage.style.setProperty("--bubble-tail-radius-ai",   showTail ? "5px" : fullR);
 
   try{
-    const snap={};document.querySelectorAll("input,textarea,select").forEach(n=>{if(n.id)snap[n.id]=n.value;});
+    const snap={};document.querySelectorAll("input,textarea,select").forEach(n=>{if(!n.id)return; snap[n.id] = n.type==="checkbox" ? n.checked : n.value;});
     snap._variant=S.variant;
     localStorage.setItem("streamgif_state1", JSON.stringify(snap));
   }catch(e){}
@@ -818,7 +926,7 @@ function sync(){
 function restore(){
   try{
     const s=JSON.parse(localStorage.getItem("streamgif_state1")||"null"); if(!s) return;
-    for(const k in s){ const n=document.getElementById(k); if(n) n.value=s[k]; }
+    for(const k in s){ const n=document.getElementById(k); if(!n) continue; if(n.type==="checkbox"){ n.checked = s[k]===true || s[k]==="true"; } else { n.value=s[k]; } }
     if(s._variant) S.variant=s._variant;
     document.querySelectorAll("#variant button").forEach(b=>b.classList.toggle("on", b.dataset.v===S.variant));
   }catch(e){}
@@ -1033,10 +1141,27 @@ function renderBubbles(thread, t, streamVariant){
     } else {
       const thinkStart = cursor;
       const streamStart = thinkStart + S.think_dur;
-      const steps = streamVariant==="A"
-        ? (b.text.match(/\S+\s*/g)||[]).length
-        : b.text.length;
-      const streamEnd = streamStart + steps * S.speed;
+      let streamEnd;
+      if(streamVariant === "A" || streamVariant === "E"){
+        const tokens = (b.text.match(/\S+\s*/g)||[]).length;
+        streamEnd = streamStart + tokens * S.speed;
+      } else if(streamVariant === "B"){
+        streamEnd = streamStart + b.text.length * S.speed;
+      } else if(streamVariant === "C"){
+        // char fade: each char starts at j*charStride, finishes charStride+fadeSpan later
+        const charStride = Math.max(8, S.speed/3);
+        const fadeSpan = S.speed;
+        streamEnd = streamStart + (b.text.length-1) * charStride + fadeSpan;
+      } else if(streamVariant === "D"){
+        // line reveal: line j starts at j*lineTime, finishes lineTime later
+        const w = (b.text.match(/\S+\s*/g)||[]).length;
+        const lines = Math.max(1, Math.ceil(w/7));
+        const lineTime = S.speed * 6;
+        streamEnd = streamStart + lines * lineTime;
+      } else {
+        const tokens = (b.text.match(/\S+\s*/g)||[]).length;
+        streamEnd = streamStart + tokens * S.speed;
+      }
       timeline.push({...b, showAt: cursor, thinkStart, streamStart, streamEnd, isLast: false});
       cursor = streamEnd + BETWEEN;
     }
@@ -1059,13 +1184,8 @@ thread.appendChild(userRow(item.text));
       }
       if(t < item.streamStart) return;
 
-      if(!item.isLast){
-        // show fully, no streaming
-        const {row,bubble} = aiShell();
-        bubble.textContent = item.text;
-        thread.appendChild(row);
-      } else {
-        // stream this one
+      // All AI bubbles stream (previously only the last one did, causing huge pauses)
+      // stream this one
         if(streamVariant === "A"){
           const tokens = item.text.match(/\S+\s*/g)||[];
           const {row,bubble} = aiShell();
@@ -1083,7 +1203,7 @@ thread.appendChild(userRow(item.text));
             span.appendChild(s);
           }
           thread.appendChild(row);
-        } else {
+        } else if(streamVariant === "B"){
           const {row,bubble} = aiShell("mono");
           const span = el("span","tw");
           const endT = item.streamStart + item.text.length*S.speed;
@@ -1098,8 +1218,64 @@ thread.appendChild(userRow(item.text));
           }
           bubble.appendChild(caret);
           thread.appendChild(row);
+        } else if(streamVariant === "C"){
+          // Char fade: each character fades in with overlap
+          const {row,bubble} = aiShell();
+          const span = el("span","chars");
+          const charStride = Math.max(8, S.speed/3); // faster stride for chars
+          const fadeSpan = S.speed; // overlap so multiple chars are fading at once
+          for(let j=0;j<item.text.length;j++){
+            const charT = item.streamStart + j*charStride;
+            const f = Math.max(0, Math.min(1, (t-charT)/fadeSpan));
+            if(f<=0) break;
+            const s=el("span","char"); s.textContent=item.text[j];
+            s.style.opacity = f.toFixed(3);
+            span.appendChild(s);
+          }
+          bubble.appendChild(span);
+          thread.appendChild(row);
+        } else if(streamVariant === "D"){
+          // Line reveal: chunk by soft line breaks (every ~6-8 words)
+          const words = item.text.match(/\S+\s*/g)||[];
+          const wordsPerLine = 7;
+          const lines = [];
+          for(let j=0;j<words.length;j+=wordsPerLine){
+            lines.push(words.slice(j,j+wordsPerLine).join(""));
+          }
+          const lineTime = S.speed * 6; // time to fully show a line
+          const {row,bubble} = aiShell();
+          const span = el("span","lines");
+          for(let j=0;j<lines.length;j++){
+            const lineT = item.streamStart + j*lineTime;
+            const f = Math.max(0, Math.min(1, (t-lineT)/lineTime));
+            if(f<=0) break;
+            const lineEl = el("span","line-reveal");
+            lineEl.style.display = "block";
+            lineEl.style.opacity = f.toFixed(3);
+            lineEl.style.transform = 'translateY('+((1-f)*6).toFixed(2)+'px)';
+            lineEl.textContent = lines[j];
+            span.appendChild(lineEl);
+          }
+          bubble.appendChild(span);
+          thread.appendChild(row);
+        } else if(streamVariant === "E"){
+          // Blur in: words appear with heavy blur + fade
+          const tokens = item.text.match(/\S+\s*/g)||[];
+          const {row,bubble} = aiShell();
+          const span = el("span","tokens");
+          const fadeSpan = S.speed * 2;
+          for(let j=0;j<tokens.length;j++){
+            const tokT = item.streamStart + j*S.speed;
+            const f = Math.max(0, Math.min(1, (t-tokT)/fadeSpan));
+            if(f<=0) break;
+            const s=el("span","tok"); s.textContent=tokens[j];
+            s.style.opacity = f.toFixed(3);
+            s.style.filter = 'blur('+((1-f)*4).toFixed(2)+'px)';
+            span.appendChild(s);
+          }
+          bubble.appendChild(span);
+          thread.appendChild(row);
         }
-      }
     }
   }
 }
@@ -1111,15 +1287,71 @@ function renderAt(t){
   const thread=$("thread");
   const tm=((t%S.dur)+S.dur)%S.dur;
   if(S.variant==="A") renderVariantA(thread,tm);
-  else renderVariantB(thread,tm);
+  else if(S.variant==="B") renderVariantB(thread,tm);
+  else renderBubbles(thread, tm, S.variant);
 }
 
 let startTs=performance.now();
 let tickPaused=false;
+let previewPlaying=true;
+
+function updatePlayBtn(){
+  const btn=$("ctrl_play");
+  if(!btn) return;
+  btn.textContent = previewPlaying ? "⏸ Pause" : "▶ Play";
+  btn.classList.toggle("playing", previewPlaying);
+}
+
 function tick(){
-  if(!tickPaused) renderAt(performance.now()-startTs);
+  if(!tickPaused){
+    const elapsed = performance.now()-startTs;
+    const dur = S.dur || 8000;
+    if(previewPlaying){
+      if(elapsed >= dur){
+        // stop at last frame
+        renderAt(dur - 50);
+        previewPlaying = false;
+        updatePlayBtn();
+      } else {
+        renderAt(elapsed);
+      }
+    }
+    // update progress bar
+    const pct = Math.min(100, (Math.min(elapsed,dur)/dur)*100);
+    const fill=$("ctrl_fill"); if(fill) fill.style.width=pct+"%";
+    const timeEl=$("ctrl_time"); if(timeEl) timeEl.textContent=(Math.min(elapsed,dur)/1000).toFixed(1)+"s";
+  }
   requestAnimationFrame(tick);
 }
+
+// Play/Pause
+document.addEventListener("DOMContentLoaded",()=>{
+  $("ctrl_play")?.addEventListener("click",()=>{
+    if(!previewPlaying){
+      // if at end, restart
+      const elapsed = performance.now()-startTs;
+      if(elapsed >= (S.dur||8000)) startTs = performance.now();
+      previewPlaying=true;
+    } else {
+      previewPlaying=false;
+    }
+    updatePlayBtn();
+  });
+  $("ctrl_restart")?.addEventListener("click",()=>{
+    startTs=performance.now();
+    previewPlaying=true;
+    updatePlayBtn();
+  });
+  // Scrub via progress bar
+  $("ctrl_progress")?.addEventListener("click",(e)=>{
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const dur = S.dur || 8000;
+    startTs = performance.now() - pct*dur;
+    previewPlaying=true;
+    updatePlayBtn();
+  });
+});
 
 /* --------- inputs --------- */
 document.querySelectorAll("input,textarea,select").forEach(i=>i.addEventListener("input",sync));
@@ -1186,6 +1418,9 @@ const THEMES = [
         const el = document.getElementById(k);
         if(el) el.value = theme[k];
       });
+      // Toggle active pill
+      pills.querySelectorAll(".theme-pill").forEach(p=>p.classList.remove("on"));
+      b.classList.add("on");
       sync();
     });
     pills.appendChild(b);
@@ -1203,7 +1438,7 @@ const FONT_LIST = [
   "Work Sans","Josefin Sans","Mulish","Quicksand","Karla","Manrope","Figtree",
 ];
 function loadGoogleFont(family){
-  const id = "gf_" + family.replace(/s/g,"_");
+  const id = "gf_" + family.replace(/\s+/g,"_").replace(/[^A-Za-z0-9_]/g,"");
   if(document.getElementById(id)) return;
   const link = document.createElement("link");
   link.id = id;
@@ -1226,7 +1461,9 @@ function applyFont(family){
     const q = input.value.trim().toLowerCase();
     if(!q){ results.classList.remove("open"); return; }
     const matches = FONT_LIST.filter(f=>f.toLowerCase().includes(q)).slice(0,10);
-    results.innerHTML = matches.map(f=>'<div class="font-result" data-font="'+f+'">'+f+'</div>').join("");
+    // preload fonts for preview
+    matches.forEach(f=>loadGoogleFont(f));
+    results.innerHTML = matches.map(f=>'<div class="font-result" data-font="'+f+'" style="font-family:\''+f+'\',Helvetica,Arial,sans-serif;font-size:14px">'+f+'</div>').join("");
     results.classList.toggle("open", matches.length>0);
   });
   results.addEventListener("click", e=>{
@@ -1287,6 +1524,7 @@ document.getElementById("btn_save_cfg").addEventListener("click", ()=>{
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href=url; a.download="chat-stream-config.json"; a.click();
   URL.revokeObjectURL(url);
+  showToast("Config saved as chat-stream-config.json");
 });
 document.getElementById("btn_load_cfg").addEventListener("change", function(){
   const file = this.files[0]; if(!file) return;
@@ -1302,7 +1540,8 @@ document.getElementById("btn_load_cfg").addEventListener("change", function(){
       if(s._bgType){ bgType=s._bgType; }
       if(s._currentFont) applyFont(s._currentFont);
       sync();
-    }catch(e){ alert("Invalid config file"); }
+      showToast("Config loaded");
+    }catch(e){ showToast("Error: Invalid config file"); }
   };
   reader.readAsText(file);
   this.value="";
@@ -1324,12 +1563,24 @@ restore(); sync(); tick();
 function scalePreview(){
   const inner = document.getElementById("stageInner");
   const wrap = document.getElementById("stageScale");
-  const avail = wrap.offsetWidth - 4;
+  // Read available width from parent (wrap's width gets shrunk each call, so don't trust it)
+  const parent = wrap.parentElement;
+  const availW = parent.clientWidth - 32; // leave a little breathing room
+  const maxH = 420;
   const sw = $("stage").offsetWidth;
-  const sc = Math.min(1, avail / sw);
+  const sh = $("stage").offsetHeight;
+  if(!sw || !sh) return;
+  const scW = Math.min(1, availW / sw);
+  const scH = Math.min(1, maxH / sh);
+  const sc = Math.min(scW, scH);
   inner.style.transform = `scale(${sc})`;
-  inner.style.transformOrigin = "top center";
-  wrap.style.height = ($("stage").offsetHeight * sc + 8) + "px";
+  inner.style.transformOrigin = "top left";
+  wrap.style.width = Math.ceil(sw * sc) + "px";
+  wrap.style.height = Math.ceil(sh * sc) + "px";
+  wrap.style.position = "relative";
+  inner.style.position = "absolute";
+  inner.style.top = "0";
+  inner.style.left = "0";
 }
 // Also call scalePreview on sync (format change triggers it)
 const _origSync = sync;
@@ -1356,6 +1607,28 @@ async function exportGif(){
   tickPaused=true;
   try{
     const {GIFEncoder,quantize,applyPalette}=await loadGifenc();
+    // Embed the current Google Font as base64 @font-face so it renders inside the SVG foreignObject
+    let embeddedFontCss = "";
+    if(currentFont){
+      try{
+        status.textContent="Embedding font…";
+        const fontUrl = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(currentFont) + ":wght@400;500;600;700&display=swap";
+        const cssResp = await fetch(fontUrl, {headers:{"User-Agent":"Mozilla/5.0"}});
+        let fontCss = await cssResp.text();
+        // Find all url(...) woff2 references and replace with base64 data URLs
+        const urlRe = /url\((https:\/\/[^)]+\.woff2)\)/g;
+        const matches = [...fontCss.matchAll(urlRe)];
+        for(const m of matches){
+          try{
+            const r = await fetch(m[1]);
+            const b = await r.blob();
+            const dataUrl = await new Promise((res)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);});
+            fontCss = fontCss.replace(m[1], dataUrl);
+          }catch(e){}
+        }
+        embeddedFontCss = fontCss;
+      }catch(e){ console.warn("Font embed failed:", e); }
+    }
     // Render first frame so auto_h can measure content
     renderAt(0);
     await new Promise(r=>setTimeout(r,50));
@@ -1406,7 +1679,7 @@ async function exportGif(){
         clone.style.setProperty(v, cs.getPropertyValue(v));
       });
       clone.style.borderRadius="0";
-      clone.style.fontFamily = 'Helvetica,"Helvetica Neue",Arial,sans-serif';
+      clone.style.fontFamily = currentFont ? `"${currentFont}",Helvetica,"Helvetica Neue",Arial,sans-serif` : 'Helvetica,"Helvetica Neue",Arial,sans-serif';
       const wrapper=document.createElement("div");
       wrapper.setAttribute("xmlns","http://www.w3.org/1999/xhtml");
       // Use live stage dimensions (may change per-frame for auto_h)
@@ -1414,7 +1687,7 @@ async function exportGif(){
       if(fW!==canvas.width||fH!==canvas.height){canvas.width=fW;canvas.height=fH;}
       wrapper.style.width=fW+"px"; wrapper.style.height=fH+"px";
       const styleEl=document.createElement("style");
-      styleEl.textContent = cssText + `
+      styleEl.textContent = embeddedFontCss + cssText + `
         * { font-family: ${currentFont ? '"'+currentFont+'",' : ''} Helvetica, "Helvetica Neue", Arial, sans-serif !important; }
         .bubble.ai.mono, .tw, .caret { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
         .titlebar, .status { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
@@ -1443,7 +1716,9 @@ async function exportGif(){
     gif.finish();
     const blob=new Blob([gif.bytes()],{type:"image/gif"});
     const url=URL.createObjectURL(blob);
-    const img=$("preview"); img.src=url; img.style.display="block";
+    const img=$("preview"); 
+    img.onload = ()=>{ img.style.width=""; img.style.height=""; };
+    img.src=url; img.style.display="block";
     $("hint").innerHTML=`GIF ready — <a href="${url}" download="chat-stream.gif">download chat-stream.gif</a> (${(blob.size/1024).toFixed(0)} KB · ${nFrames} frames · ${S.fps} fps)`;
     status.textContent="Done.";
   }catch(e){
@@ -1451,7 +1726,186 @@ async function exportGif(){
     status.textContent="Error: "+e.message;
   }finally{ btn.disabled=false; btn.textContent='Export GIF'; tickPaused=false; startTs=performance.now(); }
 }
+
+
+
+/* ─── DUPLICATE BUBBLE ──────────────────────────────────────────────────── */
+document.addEventListener("click", e=>{
+  const btn = e.target.closest("[data-dup-from]");
+  if(!btn) return;
+  const from = document.getElementById(btn.dataset.dupFrom);
+  const to = document.getElementById(btn.dataset.dupTo);
+  if(from && to){
+    to.value = from.value;
+    to.dispatchEvent(new Event("input",{bubbles:true}));
+    if(typeof sync==="function") sync();
+    showToast("Copied to "+btn.dataset.dupTo.toUpperCase());
+  }
+});
+
+function updateSizeEstimate(){
+  const est = document.getElementById("est_size");
+  const warn = document.getElementById("est_warning");
+  if(!est || typeof S === "undefined") return;
+  // rough heuristic: ~ (w*h*frames*palette_bits)/8 / compression_ratio
+  const w = parseInt(document.getElementById("stage")?.style.getPropertyValue("--sw")) || 1080;
+  const h = parseInt(document.getElementById("stage")?.style.getPropertyValue("--sh")) || 1080;
+  const fps = S.fps || 15;
+  const durS = S.dur/1000;
+  const frames = Math.round(durS*fps);
+  const colors = S.colors || 64;
+  const bits = Math.ceil(Math.log2(colors));
+  // GIF LZW compression typically 3-5x for similar frames
+  const raw = w*h*frames*bits/8;
+  const est_bytes = raw/4.5;
+  const mb = est_bytes/1024/1024;
+  const kb = est_bytes/1024;
+  let sizeStr = mb>1 ? mb.toFixed(1)+" MB" : Math.round(kb)+" KB";
+  est.textContent = sizeStr + " · " + frames + " frames · " + fps + " fps";
+  // LinkedIn warning
+  if(mb > 8){
+    warn.style.display = "block";
+    warn.textContent = "⚠ Over LinkedIn's 8MB GIF limit — reduce fps, colors, or duration";
+  } else if(mb > 5){
+    warn.style.display = "block";
+    warn.textContent = "⚠ Large file — may upload slowly on LinkedIn";
+    warn.style.color = "#b8891a";
+  } else {
+    warn.style.display = "none";
+  }
+}
+
+function showToast(msg){
+  let t = document.getElementById("toast");
+  if(!t){ t = document.createElement("div"); t.id="toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2500);
+}
 $("btn_export").addEventListener("click",exportGif);
+
+
+/* ─── SECTION SEARCH FILTER ─────────────────────────────────────────────── */
+(function(){
+  const input = document.getElementById("section_search");
+  const clear = document.getElementById("section_search_clear");
+  const wrap  = document.getElementById("section_search_wrap");
+  if(!input) return;
+  function applyFilter(){
+    const q = input.value.trim().toLowerCase();
+    wrap.classList.toggle("has-value", q.length>0);
+    const sections = document.querySelectorAll(".fs-wrap");
+    let anyOpen = false;
+    sections.forEach(s=>{
+      if(!q){ s.classList.remove("filtered-out","filtered-match"); return; }
+      const toggle = s.querySelector(".fs-toggle");
+      const body = s.querySelector(".fs-body");
+      const title = (toggle ? toggle.textContent : "").toLowerCase();
+      const bodyTxt = (body ? body.textContent : "").toLowerCase();
+      const matches = title.includes(q) || bodyTxt.includes(q);
+      s.classList.toggle("filtered-out", !matches);
+      s.classList.toggle("filtered-match", matches);
+      if(matches){ s.classList.add("open"); anyOpen=true; }
+    });
+  }
+  input.addEventListener("input", applyFilter);
+  clear.addEventListener("click", ()=>{ input.value=""; applyFilter(); input.focus(); });
+})();
+
+/* ─── KEYBOARD SHORTCUTS ────────────────────────────────────────────────── */
+(function(){
+  document.addEventListener("keydown", e=>{
+    // ignore when typing in inputs
+    const t = e.target;
+    if(t.matches("input,textarea,select")) return;
+    // Space = play/pause
+    if(e.code==="Space"){
+      e.preventDefault();
+      const btn = document.getElementById("ctrl_play");
+      if(btn) btn.click();
+    }
+    // R = restart
+    else if(e.key==="r" || e.key==="R"){
+      const btn = document.getElementById("ctrl_restart");
+      if(btn) btn.click();
+    }
+    // / = focus search
+    else if(e.key==="/"){
+      e.preventDefault();
+      const s = document.getElementById("section_search");
+      if(s) s.focus();
+    }
+    // Cmd/Ctrl+Z = undo, Cmd/Ctrl+Shift+Z = redo
+    else if((e.metaKey||e.ctrlKey) && (e.key==="z"||e.key==="Z")){
+      e.preventDefault();
+      if(e.shiftKey) historyRedo(); else historyUndo();
+    }
+  });
+})();
+
+/* ─── UNDO / REDO HISTORY ───────────────────────────────────────────────── */
+const HISTORY_MAX = 50;
+let history_stack = [];
+let history_pos = -1;
+let history_suspend = false;
+
+function snapshot(){
+  const snap = {};
+  document.querySelectorAll("input,textarea,select").forEach(n=>{
+    if(n.id) snap[n.id] = n.type==="checkbox" ? n.checked : n.value;
+  });
+  snap._variant = typeof S !== "undefined" ? S.variant : null;
+  return snap;
+}
+function historyPush(){
+  if(history_suspend) return;
+  const snap = snapshot();
+  const last = history_stack[history_pos];
+  if(last && JSON.stringify(last)===JSON.stringify(snap)) return;
+  // truncate forward history on new change
+  history_stack = history_stack.slice(0, history_pos+1);
+  history_stack.push(snap);
+  if(history_stack.length>HISTORY_MAX){ history_stack.shift(); }
+  history_pos = history_stack.length-1;
+}
+function historyRestore(snap){
+  if(!snap) return;
+  history_suspend = true;
+  Object.keys(snap).forEach(id=>{
+    if(id.startsWith("_")) return;
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el.type==="checkbox") el.checked = snap[id];
+    else el.value = snap[id];
+  });
+  if(typeof sync === "function") sync();
+  history_suspend = false;
+}
+function historyUndo(){
+  if(history_pos<=0) return;
+  history_pos--;
+  historyRestore(history_stack[history_pos]);
+}
+function historyRedo(){
+  if(history_pos>=history_stack.length-1) return;
+  history_pos++;
+  historyRestore(history_stack[history_pos]);
+}
+// snapshot after each user-initiated change
+document.addEventListener("change", e=>{
+  if(e.target.matches("input,textarea,select")) setTimeout(historyPush, 50);
+});
+document.addEventListener("input", e=>{
+  if(e.target.matches("input[type=range],input[type=color]")) {
+    clearTimeout(window.__histDebounce);
+    window.__histDebounce = setTimeout(historyPush, 300);
+  }
+});
+// initial snapshot after boot
+setTimeout(()=>historyPush(), 800);
+
+
 </script>
 </body>
 </html>
