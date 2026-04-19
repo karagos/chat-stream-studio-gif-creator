@@ -4,8 +4,8 @@
   
 A free, open-source local web app by [CAIO Group](https://wearecaio.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-[![No install required](https://img.shields.io/badge/install-none-FFD700)](#how-to-use)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![No install required](https://img.shields.io/badge/install-none-orange)](#how-to-use)
 [![Works in browser](https://img.shields.io/badge/runs%20in-browser-blue)](#how-to-use)
 
 ---
