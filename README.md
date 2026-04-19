@@ -6,19 +6,29 @@ A free, open-source local web app by [CAIO Group](https://wearecaio.com) for cre
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
 [![No install required](https://img.shields.io/badge/install-none-black)](#how-to-use)
-[![Works offline](https://img.shields.io/badge/offline-ready-black)](#how-to-use)
+[![Works in browser](https://img.shields.io/badge/runs%20in-browser-black)](#how-to-use)
 
 ---
 
 ## → [Download the app](chat-stream-studio.html)
 
-Single HTML file. Open in any browser. No install, no server, no dependencies.
+Single HTML file. Open in any browser. No install, no server, no dependencies to install.
 
 ---
 
 ## What it does
 
 Chat Stream Studio lets you animate a realistic AI chat conversation — complete with streaming text effects, thinking indicators, and custom branding — and export it as a GIF ready to post on LinkedIn.
+
+## Requirements
+
+| What | Required? |
+|------|-----------|
+| Modern browser (Chrome, Firefox, Safari, Edge) | ✅ Always |
+| Internet connection | ✅ Only for GIF export + Google Fonts |
+| Installation / Node / Python / server | ❌ Never |
+
+> The live preview, all customization, and all settings work fully offline. An internet connection is only needed when you click **Export GIF** (to load the GIF encoder from a CDN) or when you search for a Google Font.
 
 ## Features
 
@@ -33,6 +43,7 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 - **8 one-click themes** — Default, Dark, Ocean, Warm, Mint, Purple, Slate, Brand Blue
 - **Save / Load config** — export your settings as JSON and reload anytime
 - **Play once or loop** — GIF plays once and stops by default; toggle looping in Export settings
+- **Live preview controls** — play, pause, restart, scrub with progress bar
 
 ## How to use
 
