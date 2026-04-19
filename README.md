@@ -1,6 +1,6 @@
 # Chat Stream Studio
 
-## **Create AI Chat Animations Content for LinkedIn**
+**Create AI Chat Animations Content for LinkedIn**
 
 A free, open-source local web app by [CAIO Group](https://wearecaio.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
 
@@ -32,7 +32,7 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 
 ## Features
 
-- **Two streaming styles** — Word fade + rise (classic LLM feel) or typewriter with blinking caret
+- **Five streaming styles** — Word fade + rise, Typewriter with caret, Char fade, Line reveal, and Blur in
 - **Up to 4 chat bubbles** — Q1 → A1 → Q2 → A2, each AI response streams with its own thinking phase
 - **Full visual customization** — colors, fonts (Google Fonts), cell shape, shadow, border widths, gradients
 - **Avatar icons** — 16 built-in SVG icons + custom SVG upload for both user and AI
@@ -43,6 +43,7 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 - **8 one-click themes** — Default, Dark, Ocean, Warm, Mint, Purple, Slate, Brand Blue
 - **Save / Load config** — export your settings as JSON and reload anytime
 - **Play once or loop** — GIF plays once and stops by default; toggle looping in Export settings
+- **Bubble tails** — toggle between rounded-pointer corner (classic chat bubble) and fully-rounded bubbles
 - **Live preview controls** — play, pause, restart, scrub with progress bar
 
 ## How to use
@@ -64,7 +65,7 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 | 1080×1350 portrait | 10 | 32 | ~1.5–3 MB |
 | 1200×628 landscape | 10 | 32 | ~1–2 MB |
 
-LinkedIn's GIF limit is **5 MB**. Keep FPS ≤ 12 and palette colors ≤ 48 for large formats.
+LinkedIn's GIF limit is **8 MB**. The app shows a warning above 5 MB and an error above 8 MB. Keep FPS ≤ 12 and palette colors ≤ 48 for large formats.
 
 ## License
 
