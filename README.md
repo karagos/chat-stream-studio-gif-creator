@@ -10,6 +10,8 @@ A free, open-source local web app by [CAIO Group](https://wearecaio.com) for con
 
 ---
 
+<img width="800" height="560" alt="chat-stream studio by caio group" src="https://github.com/user-attachments/assets/f4bac5b9-d6f6-44bc-93e6-206cc8ff7ef4" />
+
 ## → [Download the app](chat-stream-studio.html)
 
 Single HTML file. Open in any browser. No install, no server, no dependencies to install.
