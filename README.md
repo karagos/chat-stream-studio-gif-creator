@@ -1,8 +1,8 @@
 # Chat Stream Studio
 
-## **Create AI Chat Animations Content for LinkedIn**
+## **Create AI Chat Animations Content for Social Media**
   
-A free, open-source local web app by [CAIO Group](https://wearecaio.com) for creating animated GIF exports of AI chat streaming interactions — perfect for LinkedIn posts.
+A free, open-source local web app by [CAIO Group](https://wearecaio.com) for content creators, turn AI chat streaming into animated GIFs for LinkedIn, Twitter/X, and social media.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![No install required](https://img.shields.io/badge/install-none-orange)](#how-to-use)
@@ -18,7 +18,7 @@ Single HTML file. Open in any browser. No install, no server, no dependencies to
 
 ## What it does
 
-Chat Stream Studio lets you animate a realistic AI chat conversation — complete with streaming text effects, thinking indicators, and custom branding — and export it as a GIF ready to post on LinkedIn.
+Chat Stream Studio lets you animate a realistic AI chat conversation — complete with streaming text effects, thinking indicators, and custom branding — and export it as a GIF ready to post on Social Media.
 
 ## Requirements
 
@@ -52,7 +52,7 @@ Chat Stream Studio lets you animate a realistic AI chat conversation — complet
 2. Open it in any modern browser (Chrome, Firefox, Safari, Edge)
 3. Customize your chat in the left panel
 4. Click **Export GIF** → download your file
-5. Post directly to LinkedIn
+5. Post directly to Social Media
 
 > **Tip:** Use **Auto height** format for long responses so nothing gets clipped.  
 > Use **480×480 test** format first to check timing, then switch to 1080×1080 for the final export.
